@@ -5,11 +5,16 @@ export const Route = createFileRoute("/api/tts")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { text, voiceId } = (await request.json()) as { text?: string; voiceId?: string };
+          const { text, voiceId, probe } = (await request.json()) as { text?: string; voiceId?: string; probe?: boolean };
+          const apiKey = process.env.ELEVENLABS_API_KEY;
+          if (probe) {
+            return apiKey
+              ? Response.json({ ok: true })
+              : Response.json({ error: "ELEVENLABS_API_KEY not configured" }, { status: 503 });
+          }
           if (!text || text.length === 0 || text.length > 2000) {
             return new Response("Invalid text", { status: 400 });
           }
-          const apiKey = process.env.ELEVENLABS_API_KEY;
           if (!apiKey) {
             return Response.json({ error: "ELEVENLABS_API_KEY not configured" }, { status: 503 });
           }
