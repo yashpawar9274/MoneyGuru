@@ -1,0 +1,17 @@
+{
+  "name": "MONEY.FYI — Smart Money Tracker",
+  "short_name": "MONEY.FYI",
+  "description": "Gen-Z money tracker with AI savings coach, bill scanning, and voice insights.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "categories": ["finance", "productivity", "lifestyle"],
+  "lang": "en",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
