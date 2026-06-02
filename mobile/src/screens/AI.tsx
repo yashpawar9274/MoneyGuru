@@ -13,7 +13,7 @@ export default function AIScreen() {
   const ask = async () => {
     setBusy(true);
     try {
-      const r = await fetch(`${API_BASE}/api/ai-advice`, {
+      const r = await fetch(`${API_BASE}/api/public/ai-advice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

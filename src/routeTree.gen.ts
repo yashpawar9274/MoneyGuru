@@ -15,6 +15,7 @@ import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
+import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -46,6 +47,11 @@ const ApiScanBillRoute = ApiScanBillRouteImport.update({
   path: '/api/scan-bill',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
+  id: '/api/public/ai-advice',
+  path: '/api/public/ai-advice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +90,16 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
+    | '/api/public/ai-advice'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai' | '/analytics' | '/settings' | '/api/scan-bill' | '/api/tts'
+  to:
+    | '/'
+    | '/ai'
+    | '/analytics'
+    | '/settings'
+    | '/api/scan-bill'
+    | '/api/tts'
+    | '/api/public/ai-advice'
   id:
     | '__root__'
     | '/'
@@ -91,6 +108,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
+    | '/api/public/ai-advice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +118,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ApiScanBillRoute: typeof ApiScanBillRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  ApiPublicAiAdviceRoute: typeof ApiPublicAiAdviceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -146,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiScanBillRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ai-advice': {
+      id: '/api/public/ai-advice'
+      path: '/api/public/ai-advice'
+      fullPath: '/api/public/ai-advice'
+      preLoaderRoute: typeof ApiPublicAiAdviceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -156,7 +182,18 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ApiScanBillRoute: ApiScanBillRoute,
   ApiTtsRoute: ApiTtsRoute,
+  ApiPublicAiAdviceRoute: ApiPublicAiAdviceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
