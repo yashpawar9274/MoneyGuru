@@ -1,102 +1,110 @@
 # MONEY.FYI 💸
 
-A modern, Gen-Z money tracking web app with AI savings coach, bill scanning, voice insights, and multi-language support. Built with **TanStack Start**, **React 19**, **Tailwind v4**, and the **Lovable AI Gateway**.
+A Gen-Z money tracker with AI savings coach, bill scanning, and voice insights — shipped as **two apps that share one backend**:
 
-> Live preview: deployed via [Lovable](https://lovable.dev).
+| App | Stack | Folder |
+|-----|-------|--------|
+| 🌐 Web / PWA | TanStack Start v1 + React 19 + Tailwind v4 | `/` (repo root) |
+| 📱 Mobile (iOS + Android) | Expo SDK 51 + React Native 0.74 | `/mobile` |
+
+> Live: **<https://mmoneyguru.lovable.app>**
 
 ---
 
 ## ✨ Features
 
-- 📅 **Daily / Weekly / Monthly income & expense tracking** with a day-by-day timeline
-- 📊 **Analytics** — bar charts (weekly/monthly) + category donut chart (Recharts)
-- 🤖 **AI Savings Coach** — Gen-Z tone, powered by Gemini via the Lovable AI Gateway
-- 🔊 **Voice playback** — premium ElevenLabs TTS with selectable voices, fallback to native Web Speech
-- 📸 **Bill scanning (OCR)** — snap a receipt, Gemini Vision auto-categorizes & extracts the amount
-- 🌐 **Multi-language UI** — English, हिन्दी, Español, Français
-- 🎨 **Cyber Neon Gen-Z design** — dark mode, lime + electric purple, Space Grotesk
-- 💾 **Local-first persistence** via `localStorage` (no signup needed)
-- 📱 **Mobile-first PWA-ready** with animated splash screen and no pinch-zoom
+- 📅 Daily / weekly / monthly income & expense tracking
+- 📊 Analytics — bar charts + by-category breakdown
+- 🤖 AI Savings Coach (Gemini via Lovable AI Gateway)
+- 🔊 Voice playback — ElevenLabs (premium) + native TTS fallback
+- 📸 Bill scanning — Gemini Vision auto-extracts amount + category
+- 🌐 Multi-language UI — English, हिन्दी, Español, Français
+- 🎨 Cyber Neon design — dark mode, lime + electric purple
+- 💾 Local-first storage (localStorage on web, AsyncStorage on mobile)
+- 📱 **PWA installable** on web · **real native binary** on mobile
 
 ---
 
-## 🧱 Tech Stack
+## 🌐 Web App + PWA
 
-| Layer        | Tech |
-|--------------|------|
-| Framework    | TanStack Start v1 + Vite 7 |
-| UI           | React 19, Tailwind CSS v4, framer-motion |
-| Charts       | Recharts |
-| AI           | Lovable AI Gateway (Gemini text + vision) |
-| Voice (TTS)  | ElevenLabs API (premium) + Web Speech (fallback) |
-| State        | React Context + localStorage |
-| Icons        | lucide-react |
-
----
-
-## 🚀 Getting Started
-
+### Run locally
 ```bash
-# install
 bun install
-
-# dev server
-bun run dev
-
-# production build
-bun run build
+bun run dev          # http://localhost:5173
+bun run build        # production build
 ```
 
-Open <http://localhost:5173>.
+### Install as PWA
+Open the live site (or your deployed URL) on a mobile browser → **Add to Home Screen**. The app launches in standalone mode (no browser chrome) with the MONEY.FYI icon.
 
----
+Manifest: [`public/manifest.webmanifest`](public/manifest.webmanifest) · Icon: [`public/icon-512.png`](public/icon-512.png).
 
-## 🔑 Environment Variables
+> No service worker is registered — this keeps the Lovable preview iframe stable. The app is installable and offline-ready via browser HTTP cache; for full offline support add a service worker after publishing.
 
-Both keys are managed automatically inside Lovable. For local dev outside Lovable, set them in `.env`:
+### Environment variables
 
 | Variable              | Required | Purpose |
 |-----------------------|----------|---------|
 | `LOVABLE_API_KEY`     | ✅ | AI advisor + bill scanning |
 | `ELEVENLABS_API_KEY`  | optional | Premium AI coach voice |
 
-Without `ELEVENLABS_API_KEY`, the app falls back to the device's built-in voice.
+Both are managed automatically inside Lovable. For local dev, put them in `.env`.
 
 ---
 
-## 📁 Project Structure
+## 📱 Mobile App (Expo React Native)
 
+The `/mobile` folder is an **independent Expo project**. It talks to the same backend endpoints (`/api/scan-bill`, `/api/tts`, `/api/ai-advice`) hosted on the deployed web app.
+
+### Run on your phone (Expo Go)
+```bash
+cd mobile
+npm install
+npx expo start                # scan QR code with Expo Go app
 ```
-src/
-├── components/        # SplashScreen, BottomNav, AIAdvisorCard, ScanBillButton, AddTransactionSheet
-├── lib/
-│   ├── store.tsx      # transactions context + selectors
-│   ├── i18n.tsx       # multi-language dictionary
-│   ├── voices.ts      # ElevenLabs voice presets
-│   ├── ai.functions.ts # AI advisor server function
-│   └── ai-gateway.server.ts
-├── routes/
-│   ├── index.tsx      # home — daily timeline & balances
-│   ├── analytics.tsx  # weekly/monthly + category charts
-│   ├── ai.tsx         # AI coach screen
-│   ├── settings.tsx   # language, voice picker, API key status
-│   └── api/
-│       ├── tts.ts         # ElevenLabs TTS proxy
-│       └── scan-bill.ts   # OCR + Gemini Vision
-└── styles.css         # Tailwind v4 + design tokens
+
+### Platform-specific
+```bash
+npx expo start --android      # Android emulator / device
+npx expo start --ios          # iOS simulator (macOS)
 ```
+
+### Production build (EAS)
+```bash
+npm install -g eas-cli
+eas login
+eas build:configure
+eas build -p android          # APK / AAB for Play Store
+eas build -p ios              # IPA for App Store
+```
+
+### Point at a different backend
+Edit `mobile/app.json` → `expo.extra.apiBaseUrl`.
+
+Full mobile docs: [`mobile/README.md`](mobile/README.md).
 
 ---
 
-## 📱 Native App?
+## 🧱 Repo Structure
 
-This repo is a **web app** (Cyber Neon mobile-first PWA). It is **not** a React Native project. If you want a real iOS/Android binary:
-
-- **Easiest:** wrap with [Capacitor](https://capacitorjs.com/) — keeps this codebase.
-- **From scratch:** port screens to React Native + Expo (separate project).
+```
+/
+├── src/                   # web app (TanStack Start)
+│   ├── routes/            # file-based routing
+│   ├── components/        # SplashScreen, BottomNav, AddTransactionSheet…
+│   └── lib/               # store, i18n, ai functions
+├── public/
+│   ├── manifest.webmanifest   # PWA manifest
+│   └── icon-512.png
+├── mobile/                # Expo React Native app
+│   ├── App.tsx
+│   ├── app.json
+│   └── src/{lib,screens}
+└── README.md
+```
 
 ---
 
 ## 📝 License
 
-MIT — do whatever, just don't blame us if you overspend on coffee.
+MIT.
