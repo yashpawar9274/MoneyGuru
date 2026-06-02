@@ -7,6 +7,7 @@ import { getAiAdvice } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+import { getVoiceId } from "@/lib/voices";
 
 export function AIAdvisorCard() {
   const { transactions } = useStore();
@@ -33,7 +34,7 @@ export function AIAdvisorCard() {
       const r = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, voiceId: getVoiceId() }),
       });
       if (r.status === 503) {
         // fallback browser TTS
