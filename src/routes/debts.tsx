@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
-import { useDebts, remaining, paidTotal, type DebtKind, type Debt } from "@/lib/debts";
+import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
