@@ -96,3 +96,32 @@ export function paidTotal(d: Debt) {
 export function remaining(d: Debt) {
   return Math.max(0, d.principal - paidTotal(d));
 }
+
+const FREQ_DAYS: Record<PayFreq, number> = { daily: 1, weekly: 7, monthly: 30 };
+
+export interface Forecast {
+  installments: number;
+  days: number;
+  freedomDate: Date;
+  perInstallment: number;
+  freq: PayFreq;
+}
+
+export function forecast(d: Debt): Forecast | null {
+  const left = remaining(d);
+  if (left <= 0) return null;
+  const freq: PayFreq = d.planFreq ?? (d.monthly ? "monthly" : "monthly");
+  const amt = d.planAmount ?? d.monthly ?? 0;
+  if (amt <= 0) return null;
+  const installments = Math.ceil(left / amt);
+  const days = installments * FREQ_DAYS[freq];
+  const freedomDate = new Date(Date.now() + days * 86400000);
+  return { installments, days, freedomDate, perInstallment: amt, freq };
+}
+
+export function daysUntil(iso?: string): number | null {
+  if (!iso) return null;
+  const ms = new Date(iso).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
+  return Math.round(ms / 86400000);
+}
+
