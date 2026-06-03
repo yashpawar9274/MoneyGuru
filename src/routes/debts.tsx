@@ -23,10 +23,62 @@ const KIND_META: Record<DebtKind, { label: string; emoji: string; tint: string; 
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
+const FREQ_LABEL: Record<PayFreq, string> = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
+
+function fmtDuration(days: number) {
+  if (days < 1) return "Today";
+  if (days < 31) return `${days} day${days === 1 ? "" : "s"}`;
+  const months = Math.floor(days / 30);
+  const rem = days % 30;
+  return rem === 0 ? `${months} mo` : `${months} mo ${rem}d`;
+}
+
 function DebtsPage() {
   const { debts, addDebt, removeDebt, addPayment } = useDebts();
   const [openAdd, setOpenAdd] = useState(false);
   const [payFor, setPayFor] = useState<Debt | null>(null);
+  const [notifEnabled, setNotifEnabled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    setNotifEnabled(Notification.permission === "granted");
+  }, []);
+
+  // Fire in-app + browser reminders for items due in <=3 days, once per day per debt
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const today = new Date().toISOString().slice(0, 10);
+    const key = "money_fyi_debt_reminders_v1";
+    let sent: Record<string, string> = {};
+    try { sent = JSON.parse(localStorage.getItem(key) || "{}"); } catch {}
+    let changed = false;
+    for (const d of debts) {
+      if (remaining(d) === 0) continue;
+      const du = daysUntil(d.dueDate);
+      if (du === null || du > 3 || du < 0) continue;
+      if (sent[d.id] === today) continue;
+      const msg = du === 0 ? `${d.title} is due today` : `${d.title} due in ${du} day${du === 1 ? "" : "s"}`;
+      toast(msg, { icon: "🔔", duration: 6000 });
+      if ("Notification" in window && Notification.permission === "granted") {
+        try { new Notification("Payment reminder", { body: msg, icon: "/icon-512.png" }); } catch {}
+      }
+      sent[d.id] = today;
+      changed = true;
+    }
+    if (changed) localStorage.setItem(key, JSON.stringify(sent));
+  }, [debts]);
+
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) return toast.error("Browser doesn't support notifications");
+    const p = await Notification.requestPermission();
+    if (p === "granted") {
+      setNotifEnabled(true);
+      toast.success("Reminders on");
+      try { new Notification("MONEY.FYI", { body: "You'll get alerts before due dates", icon: "/icon-512.png" }); } catch {}
+    } else {
+      toast.error("Permission denied");
+    }
+  };
 
   const totals = useMemo(() => {
     let owe = 0, lent = 0, emi = 0;
@@ -39,23 +91,106 @@ function DebtsPage() {
     return { owe, lent, emi };
   }, [debts]);
 
+  const myDebts = useMemo(
+    () => debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0),
+    [debts],
+  );
+
+  const freedom = useMemo(() => {
+    let maxDays = 0;
+    let totalLeft = 0;
+    let planned = 0;
+    for (const d of myDebts) {
+      totalLeft += remaining(d);
+      const f = forecast(d);
+      if (f) {
+        planned++;
+        if (f.days > maxDays) maxDays = f.days;
+      }
+    }
+    return { maxDays, totalLeft, planned, unplanned: myDebts.length - planned };
+  }, [myDebts]);
+
+  const upcoming = useMemo(
+    () =>
+      debts
+        .map((d) => ({ d, du: daysUntil(d.dueDate) }))
+        .filter((x) => x.du !== null && x.du >= 0 && x.du <= 7 && remaining(x.d) > 0)
+        .sort((a, b) => (a.du! - b.du!)),
+    [debts],
+  );
+
   return (
     <div className="px-5 pt-6">
       <header className="flex items-center gap-3 mb-6">
         <Link to="/" className="size-9 bg-card rounded-full border border-border flex items-center justify-center">
           <ArrowLeft className="size-4" />
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-display font-bold">Udhari & EMI</h1>
           <p className="text-[10px] text-foreground/50 uppercase tracking-widest">Free tracker</p>
         </div>
+        {!notifEnabled && (
+          <button
+            onClick={enableNotifications}
+            className="text-[10px] font-bold uppercase tracking-widest bg-secondary rounded-full px-3 py-1.5 flex items-center gap-1"
+          >
+            <Bell className="size-3" /> Alerts
+          </button>
+        )}
       </header>
 
-      <div className="grid grid-cols-3 gap-2 mb-5">
+      <div className="grid grid-cols-3 gap-2 mb-4">
         <StatCard label="You Owe" value={inr(totals.owe)} tint="text-danger" />
         <StatCard label="Lent Out" value={inr(totals.lent)} tint="text-success" />
         <StatCard label="EMI Left" value={inr(totals.emi)} tint="text-accent" />
       </div>
+
+      {myDebts.length > 0 && (
+        <div className="bg-gradient-to-br from-neon/15 via-card to-card border border-neon/30 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="size-4 text-neon" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neon">Debt Freedom Plan</p>
+          </div>
+          {freedom.maxDays > 0 ? (
+            <>
+              <p className="text-2xl font-display font-bold">{fmtDuration(freedom.maxDays)}</p>
+              <p className="text-[11px] text-foreground/60 mt-0.5">
+                Mukti by {new Date(Date.now() + freedom.maxDays * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              </p>
+              <p className="text-[10px] text-foreground/50 mt-2">
+                {freedom.planned} of {myDebts.length} planned · {inr(freedom.totalLeft)} pending
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-foreground/60">
+              Add a payment plan (daily / weekly / monthly) to each debt to see when you'll be debt-free.
+            </p>
+          )}
+          {freedom.unplanned > 0 && freedom.maxDays > 0 && (
+            <p className="text-[10px] text-warning mt-1">{freedom.unplanned} debt{freedom.unplanned === 1 ? "" : "s"} missing a plan</p>
+          )}
+        </div>
+      )}
+
+      {upcoming.length > 0 && (
+        <div className="bg-card border border-border rounded-2xl p-3 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <CalendarClock className="size-3.5 text-accent" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/60">Due This Week</p>
+          </div>
+          <div className="space-y-1.5">
+            {upcoming.map(({ d, du }) => (
+              <div key={d.id} className="flex items-center justify-between text-xs">
+                <span className="truncate">{d.title}</span>
+                <span className={`font-bold ${du! <= 1 ? "text-danger" : "text-warning"}`}>
+                  {du === 0 ? "Today" : du === 1 ? "Tomorrow" : `${du}d`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button
         onClick={() => setOpenAdd(true)}
@@ -69,6 +204,7 @@ function DebtsPage() {
           No udhari or EMI yet. Tap above to add one.
         </div>
       )}
+
 
       <div className="space-y-3">
         {debts.map((d) => {
