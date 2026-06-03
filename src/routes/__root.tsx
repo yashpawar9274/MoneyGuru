@@ -12,6 +12,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "@/lib/store";
+import { DebtsProvider } from "@/lib/debts";
 import { I18nProvider } from "@/lib/i18n";
 import { SplashScreen } from "@/components/SplashScreen";
 import { BottomNav } from "@/components/BottomNav";
@@ -103,16 +104,18 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <StoreProvider>
-          <SplashScreen />
-          <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
-            <Outlet />
-          </div>
-          <BottomNav onAdd={() => setAddOpen(true)} />
-          <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
-          <Toaster
-            theme="dark" position="top-center"
-            toastOptions={{ style: { background: "hsl(240 5% 12%)", color: "white", border: "1px solid hsl(240 5% 20%)" } }}
-          />
+          <DebtsProvider>
+            <SplashScreen />
+            <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
+              <Outlet />
+            </div>
+            <BottomNav onAdd={() => setAddOpen(true)} />
+            <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
+            <Toaster
+              theme="dark" position="top-center"
+              toastOptions={{ style: { background: "hsl(240 5% 12%)", color: "white", border: "1px solid hsl(240 5% 20%)" } }}
+            />
+          </DebtsProvider>
         </StoreProvider>
       </I18nProvider>
     </QueryClientProvider>

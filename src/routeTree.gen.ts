@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as DebtsRouteImport } from './routes/debts'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-ad
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebtsRoute = DebtsRouteImport.update({
+  id: '/debts',
+  path: '/debts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
+  '/debts': typeof DebtsRoute
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
+  '/debts': typeof DebtsRoute
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
+  '/debts': typeof DebtsRoute
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai'
     | '/analytics'
+    | '/debts'
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai'
     | '/analytics'
+    | '/debts'
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai'
     | '/analytics'
+    | '/debts'
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiRoute: typeof AiRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  DebtsRoute: typeof DebtsRoute
   SettingsRoute: typeof SettingsRoute
   ApiScanBillRoute: typeof ApiScanBillRoute
   ApiTtsRoute: typeof ApiTtsRoute
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debts': {
+      id: '/debts'
+      path: '/debts'
+      fullPath: '/debts'
+      preLoaderRoute: typeof DebtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiRoute: AiRoute,
   AnalyticsRoute: AnalyticsRoute,
+  DebtsRoute: DebtsRoute,
   SettingsRoute: SettingsRoute,
   ApiScanBillRoute: ApiScanBillRoute,
   ApiTtsRoute: ApiTtsRoute,
