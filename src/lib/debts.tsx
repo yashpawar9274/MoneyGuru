@@ -9,6 +9,8 @@ export interface DebtPayment {
   note?: string;
 }
 
+export type PayFreq = "daily" | "weekly" | "monthly";
+
 export interface Debt {
   id: string;
   kind: DebtKind;
@@ -18,6 +20,8 @@ export interface Debt {
   dueDate?: string;     // ISO due date
   createdAt: string;
   payments: DebtPayment[];
+  planAmount?: number;  // amount per installment of the payoff plan
+  planFreq?: PayFreq;   // how often you can pay
 }
 
 const KEY = "money_fyi_debts_v1";
