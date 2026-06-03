@@ -246,12 +246,26 @@ function DebtsPage() {
                 <span>of {inr(d.principal)}</span>
               </div>
 
-              {d.monthly ? (
-                <p className="text-[10px] text-foreground/50 mt-2">EMI per month: {inr(d.monthly)}</p>
-              ) : null}
+              {(() => {
+                const f = forecast(d);
+                if (!f) return null;
+                return (
+                  <div className="mt-3 bg-neon/5 border border-neon/20 rounded-xl p-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="size-3 text-neon" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-neon">Mukti in</span>
+                    </div>
+                    <p className="text-sm font-display font-bold mt-0.5">{fmtDuration(f.days)}</p>
+                    <p className="text-[10px] text-foreground/50">
+                      {f.installments} × {inr(f.perInstallment)} ({FREQ_LABEL[f.freq]}) · by {f.freedomDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                    </p>
+                  </div>
+                );
+              })()}
               {d.dueDate ? (
-                <p className="text-[10px] text-foreground/50 mt-1">Due: {new Date(d.dueDate).toLocaleDateString()}</p>
+                <p className="text-[10px] text-foreground/50 mt-2">Due: {new Date(d.dueDate).toLocaleDateString()}</p>
               ) : null}
+
 
               <button
                 onClick={() => setPayFor(d)}
