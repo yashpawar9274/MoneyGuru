@@ -312,28 +312,34 @@ function AddDebtSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: (d: { kind: DebtKind; title: string; principal: number; monthly?: number; dueDate?: string }) => void;
+  onSave: (d: { kind: DebtKind; title: string; principal: number; monthly?: number; dueDate?: string; planAmount?: number; planFreq?: PayFreq }) => void;
 }) {
   const [kind, setKind] = useState<DebtKind>("udhari_taken");
   const [title, setTitle] = useState("");
   const [principal, setPrincipal] = useState("");
   const [monthly, setMonthly] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [planFreq, setPlanFreq] = useState<PayFreq>("monthly");
+  const [planAmount, setPlanAmount] = useState("");
 
   const submit = () => {
     const p = parseFloat(principal);
     if (!title.trim()) return toast.error("Enter a name/title");
     if (!p || p <= 0) return toast.error("Enter a valid amount");
+    const pa = planAmount ? parseFloat(planAmount) : undefined;
     onSave({
       kind,
       title: title.trim(),
       principal: p,
       monthly: monthly ? parseFloat(monthly) : undefined,
       dueDate: dueDate || undefined,
+      planAmount: pa,
+      planFreq: pa ? planFreq : undefined,
     });
-    setTitle(""); setPrincipal(""); setMonthly(""); setDueDate("");
+    setTitle(""); setPrincipal(""); setMonthly(""); setDueDate(""); setPlanAmount(""); setPlanFreq("monthly");
     onClose();
   };
+
 
   return (
     <AnimatePresence>
