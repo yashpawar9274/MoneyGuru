@@ -411,6 +411,32 @@ function AddDebtSheet({
               </Field>
             </div>
 
+            <div className="mt-1 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Payoff Plan (helps analyzer)</span>
+              <div className="grid grid-cols-3 gap-2 mt-1.5 mb-2">
+                {(["daily", "weekly", "monthly"] as PayFreq[]).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setPlanFreq(f)}
+                    className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
+                      planFreq === f ? "bg-neon/10 border-neon text-neon" : "bg-secondary border-transparent"
+                    }`}
+                  >
+                    {FREQ_LABEL[f]}
+                  </button>
+                ))}
+              </div>
+              <input
+                inputMode="decimal" value={planAmount}
+                onChange={(e) => setPlanAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+                placeholder={`Amount per ${planFreq.replace("ly", "")}`}
+                className="w-full bg-secondary rounded-xl px-3 py-2.5 text-sm outline-none placeholder:text-foreground/30"
+              />
+            </div>
+
+
+
             <button
               onClick={submit}
               className="mt-5 w-full bg-neon text-neon-foreground font-bold py-3.5 rounded-2xl text-sm tracking-wide"
