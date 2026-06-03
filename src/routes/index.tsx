@@ -103,11 +103,29 @@ function Dashboard() {
         </div>
       </motion.section>
 
+      {/* Udhari & EMI quick action */}
+      <section className="mt-5">
+        <Link
+          to="/debts"
+          className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-2xl active:scale-[0.99] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <div className="size-11 rounded-xl bg-gradient-to-br from-accent to-neon grid place-items-center text-xl">🤝</div>
+            <div>
+              <p className="text-sm font-semibold">Udhari & EMI</p>
+              <p className="text-[10px] text-foreground/50 uppercase tracking-widest">Track loans • Mark payments</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-neon uppercase tracking-widest">Open →</span>
+        </Link>
+      </section>
+
       {/* AI */}
       <section className="mt-5"><AIAdvisorCard /></section>
 
       {/* Scan */}
       <section className="mt-4"><ScanBillButton /></section>
+
 
       {/* Day-by-day feed */}
       <section className="mt-7">
