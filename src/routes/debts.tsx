@@ -41,6 +41,47 @@ function DebtsPage() {
   const [openAdd, setOpenAdd] = useState(false);
   const [payFor, setPayFor] = useState<Debt | null>(null);
   const [notifEnabled, setNotifEnabled] = useState(false);
+  const { transactions } = useStore();
+  const fetchAdvice = useServerFn(getDebtAdvice);
+  const [advice, setAdvice] = useState<Awaited<ReturnType<typeof getDebtAdvice>> | null>(null);
+  const [adviceLoading, setAdviceLoading] = useState(false);
+  const [adviceOpen, setAdviceOpen] = useState(false);
+
+  const runAdvice = async () => {
+    if (myDebtsRef.length === 0) return toast.error("Add a debt first");
+    setAdviceLoading(true);
+    setAdviceOpen(true);
+    try {
+      const now = Date.now();
+      const monthTx = transactions.filter((t) => +new Date(t.date) >= now - 30 * 86400000);
+      let inc = 0, exp = 0;
+      for (const t of monthTx) {
+        if (t.type === "income") inc += t.amount;
+        else exp += t.amount;
+      }
+      const payload = {
+        lang: "hi" as const,
+        monthlyIncome: inc || undefined,
+        monthlyExpense: exp || undefined,
+        debts: myDebtsRef.map((d) => ({
+          title: d.title,
+          kind: d.kind,
+          remaining: remaining(d),
+          monthly: d.monthly,
+          planAmount: d.planAmount,
+          planFreq: d.planFreq,
+          dueInDays: daysUntil(d.dueDate),
+        })),
+      };
+      const res = await fetchAdvice({ data: payload });
+      setAdvice(res);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI failed");
+      setAdviceOpen(false);
+    } finally {
+      setAdviceLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
