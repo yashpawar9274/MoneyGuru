@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
+import { getDebtAdvice } from "@/lib/debt-advice.functions";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
@@ -38,6 +41,47 @@ function DebtsPage() {
   const [openAdd, setOpenAdd] = useState(false);
   const [payFor, setPayFor] = useState<Debt | null>(null);
   const [notifEnabled, setNotifEnabled] = useState(false);
+  const { transactions } = useStore();
+  const fetchAdvice = useServerFn(getDebtAdvice);
+  const [advice, setAdvice] = useState<Awaited<ReturnType<typeof getDebtAdvice>> | null>(null);
+  const [adviceLoading, setAdviceLoading] = useState(false);
+  const [adviceOpen, setAdviceOpen] = useState(false);
+
+  const runAdvice = async () => {
+    if (debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).length === 0) return toast.error("Add a debt first");
+    setAdviceLoading(true);
+    setAdviceOpen(true);
+    try {
+      const now = Date.now();
+      const monthTx = transactions.filter((t) => +new Date(t.date) >= now - 30 * 86400000);
+      let inc = 0, exp = 0;
+      for (const t of monthTx) {
+        if (t.type === "income") inc += t.amount;
+        else exp += t.amount;
+      }
+      const payload = {
+        lang: "hi" as const,
+        monthlyIncome: inc || undefined,
+        monthlyExpense: exp || undefined,
+        debts: debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).map((d) => ({
+          title: d.title,
+          kind: d.kind,
+          remaining: remaining(d),
+          monthly: d.monthly,
+          planAmount: d.planAmount,
+          planFreq: d.planFreq,
+          dueInDays: daysUntil(d.dueDate),
+        })),
+      };
+      const res = await fetchAdvice({ data: payload });
+      setAdvice(res);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI failed");
+      setAdviceOpen(false);
+    } finally {
+      setAdviceLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -173,6 +217,23 @@ function DebtsPage() {
         </div>
       )}
 
+      <button
+        onClick={runAdvice}
+        disabled={adviceLoading}
+        className="w-full mb-4 bg-gradient-to-r from-accent/20 to-neon/20 border border-accent/40 rounded-2xl p-3 flex items-center gap-3 active:scale-[0.99] transition-transform disabled:opacity-60"
+      >
+        <div className="size-9 rounded-xl bg-accent/20 grid place-items-center">
+          {adviceLoading ? <Loader2 className="size-4 animate-spin text-accent" /> : <Brain className="size-4 text-accent" />}
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-xs font-bold">AI Debt Coach</p>
+          <p className="text-[10px] text-foreground/60">Daily pay plan + where to park savings</p>
+        </div>
+        <Sparkles className="size-4 text-neon" />
+      </button>
+
+
+
       {upcoming.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-3 mb-4">
           <div className="flex items-center gap-2 mb-2">
@@ -294,6 +355,120 @@ function DebtsPage() {
           setPayFor(null);
         }}
       />
+      <AdviceSheet
+        open={adviceOpen}
+        loading={adviceLoading}
+        advice={advice}
+        onClose={() => setAdviceOpen(false)}
+      />
+    </div>
+  );
+}
+
+function AdviceSheet({
+  open, loading, advice, onClose,
+}: {
+  open: boolean;
+  loading: boolean;
+  advice: Awaited<ReturnType<typeof getDebtAdvice>> | null;
+  onClose: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onClose}
+          />
+          <motion.div
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-card rounded-t-3xl z-50 p-6 pb-8 border-t border-border max-h-[85vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <Brain className="size-5 text-accent" />
+                <h2 className="text-lg font-display font-bold">AI Debt Coach</h2>
+              </div>
+              <button onClick={onClose} className="size-9 rounded-full bg-secondary flex items-center justify-center">
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {loading && (
+              <div className="py-16 flex flex-col items-center gap-3">
+                <Loader2 className="size-8 animate-spin text-accent" />
+                <p className="text-xs text-foreground/60">Crunching your numbers…</p>
+              </div>
+            )}
+
+            {!loading && advice && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <PayCard label="Daily" value={advice.dailyPay} tint="text-neon" />
+                  <PayCard label="Weekly" value={advice.weeklyPay} tint="text-accent" />
+                  <PayCard label="Monthly" value={advice.monthlyPay} tint="text-success" />
+                </div>
+
+                <div className="bg-gradient-to-br from-neon/15 to-card border border-neon/30 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="size-3.5 text-neon" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-neon">Mukti in</p>
+                  </div>
+                  <p className="text-2xl font-display font-bold">{fmtDuration(advice.clearInDays)}</p>
+                </div>
+
+                <InfoCard
+                  icon={<CreditCard className="size-3.5 text-warning" />}
+                  label="Attack First"
+                  text={advice.priority}
+                  tone="warning"
+                />
+                <InfoCard
+                  icon={<PiggyBank className="size-3.5 text-success" />}
+                  label="Park Savings Here"
+                  text={advice.saveWhere}
+                  tone="success"
+                />
+                <InfoCard
+                  icon={<Sparkles className="size-3.5 text-accent" />}
+                  label="Bottom Line"
+                  text={advice.summary}
+                  tone="accent"
+                />
+
+                <p className="text-[10px] text-foreground/40 text-center pt-2">
+                  AI suggestion — not financial advice. Adjust to your situation.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function PayCard({ label, value, tint }: { label: string; value: number; tint: string }) {
+  return (
+    <div className="bg-secondary rounded-2xl p-3 text-center">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-foreground/40">{label}</p>
+      <p className={`text-base font-display font-bold mt-1 ${tint}`}>₹{value.toLocaleString("en-IN")}</p>
+    </div>
+  );
+}
+
+function InfoCard({ icon, label, text, tone }: { icon: React.ReactNode; label: string; text: string; tone: "warning" | "success" | "accent" }) {
+  const border = tone === "warning" ? "border-warning/30" : tone === "success" ? "border-success/30" : "border-accent/30";
+  const color = tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-accent";
+  return (
+    <div className={`bg-card border ${border} rounded-2xl p-3`}>
+      <div className="flex items-center gap-1.5 mb-1">
+        {icon}
+        <p className={`text-[10px] font-bold uppercase tracking-widest ${color}`}>{label}</p>
+      </div>
+      <p className="text-xs leading-relaxed text-foreground/85">{text}</p>
     </div>
   );
 }
