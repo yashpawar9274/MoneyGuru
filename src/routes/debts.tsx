@@ -217,6 +217,23 @@ function DebtsPage() {
         </div>
       )}
 
+      <button
+        onClick={runAdvice}
+        disabled={adviceLoading}
+        className="w-full mb-4 bg-gradient-to-r from-accent/20 to-neon/20 border border-accent/40 rounded-2xl p-3 flex items-center gap-3 active:scale-[0.99] transition-transform disabled:opacity-60"
+      >
+        <div className="size-9 rounded-xl bg-accent/20 grid place-items-center">
+          {adviceLoading ? <Loader2 className="size-4 animate-spin text-accent" /> : <Brain className="size-4 text-accent" />}
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-xs font-bold">AI Debt Coach</p>
+          <p className="text-[10px] text-foreground/60">Daily pay plan + where to park savings</p>
+        </div>
+        <Sparkles className="size-4 text-neon" />
+      </button>
+
+
+
       {upcoming.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-3 mb-4">
           <div className="flex items-center gap-2 mb-2">
