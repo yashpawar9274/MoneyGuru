@@ -48,7 +48,7 @@ function DebtsPage() {
   const [adviceOpen, setAdviceOpen] = useState(false);
 
   const runAdvice = async () => {
-    if (myDebtsRef.length === 0) return toast.error("Add a debt first");
+    if (debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).length === 0) return toast.error("Add a debt first");
     setAdviceLoading(true);
     setAdviceOpen(true);
     try {
@@ -63,7 +63,7 @@ function DebtsPage() {
         lang: "hi" as const,
         monthlyIncome: inc || undefined,
         monthlyExpense: exp || undefined,
-        debts: myDebtsRef.map((d) => ({
+        debts: debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).map((d) => ({
           title: d.title,
           kind: d.kind,
           remaining: remaining(d),
