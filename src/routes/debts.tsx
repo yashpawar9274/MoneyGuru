@@ -51,6 +51,7 @@ function DebtsPage() {
   const [advice, setAdvice] = useState<Awaited<ReturnType<typeof getDebtAdvice>> | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
   const [adviceOpen, setAdviceOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const runAdvice = async () => {
     if (debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).length === 0) return toast.error("Add a debt first");
