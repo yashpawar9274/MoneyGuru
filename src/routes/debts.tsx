@@ -62,7 +62,7 @@ function DebtsPage() {
         else exp += t.amount;
       }
       const payload = {
-        lang: "hi" as const,
+        lang,
         monthlyIncome: inc || undefined,
         monthlyExpense: exp || undefined,
         debts: debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).map((d) => ({
