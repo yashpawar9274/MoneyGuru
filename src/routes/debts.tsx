@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
 import { getDebtAdvice } from "@/lib/debt-advice.functions";
 import { useStore } from "@/lib/store";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
@@ -42,6 +43,7 @@ function DebtsPage() {
   const [payFor, setPayFor] = useState<Debt | null>(null);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const { transactions } = useStore();
+  const { lang } = useI18n();
   const fetchAdvice = useServerFn(getDebtAdvice);
   const [advice, setAdvice] = useState<Awaited<ReturnType<typeof getDebtAdvice>> | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
@@ -60,7 +62,7 @@ function DebtsPage() {
         else exp += t.amount;
       }
       const payload = {
-        lang: "hi" as const,
+        lang,
         monthlyIncome: inc || undefined,
         monthlyExpense: exp || undefined,
         debts: debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).map((d) => ({
