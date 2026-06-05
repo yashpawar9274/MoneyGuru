@@ -59,13 +59,14 @@ export const getDebtAdvice = createServerFn({ method: "POST" })
     const gateway = createLovableAiGatewayProvider(key);
 
     const myDebts = data.debts.filter((d) => d.kind !== "udhari_given" && d.remaining > 0);
+    const NO_DEBT: Record<"en" | "hi" | "es" | "fr", { priority: string; saveWhere: string; summary: string }> = {
+      en: { priority: "No debts. You're free!", saveWhere: "Park surplus in a liquid fund or RD for emergencies.", summary: "All clear — keep stacking savings." },
+      hi: { priority: "कोई debt नहीं है. Tum free ho!", saveWhere: "Surplus ko liquid fund ya RD me park karo for emergencies.", summary: "All clear — keep stacking savings." },
+      es: { priority: "Sin deudas. ¡Eres libre!", saveWhere: "Guarda el excedente en un fondo líquido o RD para emergencias.", summary: "Todo limpio — sigue ahorrando." },
+      fr: { priority: "Aucune dette. Tu es libre !", saveWhere: "Place le surplus dans un fonds liquide ou RD pour les imprévus.", summary: "Tout clair — continue d'épargner." },
+    };
     if (myDebts.length === 0) {
-      return {
-        dailyPay: 0, weeklyPay: 0, monthlyPay: 0, clearInDays: 0,
-        priority: "Koi debt nahi hai. Tum free ho!",
-        saveWhere: "Surplus ko liquid fund ya RD me park karo for emergencies.",
-        summary: "All clear — keep stacking savings.",
-      };
+      return { dailyPay: 0, weeklyPay: 0, monthlyPay: 0, clearInDays: 0, ...NO_DEBT[data.lang] };
     }
     const totalOwe = myDebts.reduce((s, d) => s + d.remaining, 0);
     const lines = myDebts.map(
@@ -82,10 +83,7 @@ export const getDebtAdvice = createServerFn({ method: "POST" })
         ? `Monthly income ≈ ₹${data.monthlyIncome.toFixed(0)}, expenses ≈ ₹${data.monthlyExpense.toFixed(0)}, surplus ≈ ₹${(data.monthlyIncome - data.monthlyExpense).toFixed(0)}`
         : `Cashflow unknown — assume modest surplus.`;
 
-    const langLine =
-      data.lang === "hi"
-        ? "Write priority, saveWhere and summary in casual Hinglish (Devanagari mixed with English), Gen-Z friendly tone."
-        : "Write priority, saveWhere and summary in friendly English.";
+    const langLine = LANG_INSTRUCTION[data.lang];
 
     const prompt = `You are a personal-finance coach for an Indian user clearing debts (udhari & EMI) fast.
 ${langLine}
