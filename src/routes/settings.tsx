@@ -118,23 +118,47 @@ function SettingsPage() {
                 : "bg-secondary text-foreground/50"
             }`}
           >
-            {keyStatus === "ok" ? "CONNECTED" : keyStatus === "missing" ? "NOT SET" : "CHECKING…"}
+            {keyStatus === "ok"
+              ? keySource === "user" ? "YOUR KEY" : "CONNECTED"
+              : keyStatus === "missing" ? "NOT SET" : "CHECKING…"}
           </span>
         </div>
         <p className="text-xs text-foreground/60 leading-relaxed mb-3">
-          Add your ElevenLabs API key to unlock premium AI coach voices. Without it, the app uses your device's built-in voice.
+          Paste your own ElevenLabs API key to use premium voices. Stored only on this device.
         </p>
+        <div className="flex gap-2 mb-2">
+          <div className="flex-1 relative">
+            <input
+              type={showKey ? "text" : "password"}
+              value={userKey}
+              onChange={(e) => setUserKey(e.target.value)}
+              placeholder="sk_..."
+              className="w-full bg-secondary/60 rounded-xl px-3 py-2.5 text-xs font-mono pr-9 focus:outline-none focus:ring-1 focus:ring-neon"
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey((s) => !s)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/40"
+              aria-label={showKey ? "Hide" : "Show"}
+            >
+              {showKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+            </button>
+          </div>
+          <button
+            onClick={saveKey}
+            className="px-4 py-2.5 rounded-xl bg-neon text-neon-foreground text-[10px] font-bold uppercase tracking-widest"
+          >
+            Save
+          </button>
+        </div>
         <a
           href="https://elevenlabs.io/app/settings/api-keys"
           target="_blank"
           rel="noreferrer"
-          className="text-xs flex items-center gap-2 text-neon font-bold mb-2"
+          className="text-xs flex items-center gap-2 text-neon font-bold"
         >
           <KeyRound className="size-3.5" /> Get your API key →
         </a>
-        <p className="text-[10px] text-foreground/40 leading-relaxed">
-          Then ask the AI in chat: <span className="text-foreground/70">"Add my ElevenLabs API key"</span> — Lovable will securely save it as <span className="font-mono">ELEVENLABS_API_KEY</span>.
-        </p>
       </section>
 
       <section className="mt-4 bg-card rounded-2xl p-4">
