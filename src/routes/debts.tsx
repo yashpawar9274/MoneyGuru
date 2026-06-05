@@ -237,8 +237,48 @@ function DebtsPage() {
         </div>
         <Sparkles className="size-4 text-neon" />
       </button>
+      <button
+        onClick={() => setChatOpen(true)}
+        className="w-full mb-4 bg-card border border-border rounded-2xl p-3 flex items-center gap-3 active:scale-[0.99] transition-transform"
+      >
+        <div className="size-9 rounded-xl bg-neon/15 grid place-items-center">
+          <MessageCircle className="size-4 text-neon" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-xs font-bold">Chat with AI Coach</p>
+          <p className="text-[10px] text-foreground/60">Share your income — get daily/weekly/monthly plans</p>
+        </div>
+        <Sparkles className="size-4 text-neon" />
+      </button>
 
-
+      <div className="bg-gradient-to-br from-success/15 via-card to-card border border-success/30 rounded-2xl p-4 mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Gift className="size-3.5 text-success" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-success">Save Smarter — Referrals</p>
+        </div>
+        <p className="text-[11px] text-foreground/60 mb-3">
+          Park your daily savings in these apps. Sign up via these links — you grab the joining reward, we earn a small kickback.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {REFERRALS.map((r) => (
+            <a
+              key={r.id}
+              href={r.url}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-secondary/60 rounded-xl p-2.5 active:scale-95 transition-transform"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg">{r.emoji}</span>
+                <span className="text-xs font-bold">{r.name}</span>
+                <ExternalLink className="size-2.5 text-foreground/40 ml-auto" />
+              </div>
+              <p className="text-[10px] text-foreground/55 mt-0.5 leading-tight">{r.tagline}</p>
+              {r.reward && <p className="text-[9px] text-success font-bold mt-1">🎁 {r.reward}</p>}
+            </a>
+          ))}
+        </div>
+      </div>
 
       {upcoming.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-3 mb-4">
