@@ -5,18 +5,18 @@ export const Route = createFileRoute("/api/tts")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { text, voiceId, probe } = (await request.json()) as { text?: string; voiceId?: string; probe?: boolean };
-          const apiKey = process.env.ELEVENLABS_API_KEY;
+          const { text, voiceId, probe, userKey } = (await request.json()) as { text?: string; voiceId?: string; probe?: boolean; userKey?: string };
+          const apiKey = (userKey && userKey.trim()) || process.env.ELEVENLABS_API_KEY;
           if (probe) {
             return apiKey
-              ? Response.json({ ok: true })
-              : Response.json({ error: "ELEVENLABS_API_KEY not configured" }, { status: 503 });
+              ? Response.json({ ok: true, source: userKey ? "user" : "server" })
+              : Response.json({ error: "No ElevenLabs key set" }, { status: 503 });
           }
           if (!text || text.length === 0 || text.length > 2000) {
             return new Response("Invalid text", { status: 400 });
           }
           if (!apiKey) {
-            return Response.json({ error: "ELEVENLABS_API_KEY not configured" }, { status: 503 });
+            return Response.json({ error: "No ElevenLabs key set" }, { status: 503 });
           }
           const voice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah
           const r = await fetch(
