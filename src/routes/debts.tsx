@@ -407,6 +407,13 @@ function DebtsPage() {
         advice={advice}
         onClose={() => setAdviceOpen(false)}
       />
+      <ChatSheet
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        lang={lang}
+        debts={debts}
+        transactions={transactions}
+      />
     </div>
   );
 }
