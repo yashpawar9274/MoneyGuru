@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
 import { getDebtAdvice } from "@/lib/debt-advice.functions";
 import { useStore } from "@/lib/store";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
