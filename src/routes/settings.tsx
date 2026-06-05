@@ -21,17 +21,37 @@ function SettingsPage() {
   const { clearAll, transactions } = useStore();
   const [voice, setVoice] = useState<string>(VOICES[0].id);
   const [keyStatus, setKeyStatus] = useState<"unknown" | "ok" | "missing">("unknown");
+  const [keySource, setKeySource] = useState<"user" | "server" | null>(null);
   const [testing, setTesting] = useState(false);
+  const [userKey, setUserKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
 
-  useEffect(() => {
-    setVoice(getVoiceId());
-    // probe server for key presence
+  const probe = (key?: string) =>
     fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: "ok", voiceId: getVoiceId(), probe: true }),
-    }).then((r) => setKeyStatus(r.status === 503 ? "missing" : "ok")).catch(() => setKeyStatus("missing"));
+      body: JSON.stringify({ text: "ok", voiceId: getVoiceId(), probe: true, userKey: key }),
+    })
+      .then(async (r) => {
+        if (r.status === 503) { setKeyStatus("missing"); setKeySource(null); return; }
+        const d = await r.json().catch(() => ({}));
+        setKeyStatus("ok");
+        setKeySource(d.source ?? "server");
+      })
+      .catch(() => setKeyStatus("missing"));
+
+  useEffect(() => {
+    setVoice(getVoiceId());
+    const k = getElevenKey();
+    setUserKey(k);
+    probe(k);
   }, []);
+
+  const saveKey = async () => {
+    setElevenKey(userKey.trim());
+    await probe(userKey.trim());
+    toast.success(userKey.trim() ? "Key saved & verified" : "Key cleared");
+  };
 
   const pickVoice = (id: string) => {
     setVoice(id);
@@ -45,7 +65,7 @@ function SettingsPage() {
       const r = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: "Hey! This is your money coach. Let's stack some savings.", voiceId: id }),
+        body: JSON.stringify({ text: "Hey! This is your money coach. Let's stack some savings.", voiceId: id, userKey: getElevenKey() }),
       });
       if (r.status === 503) {
         const u = new SpeechSynthesisUtterance("Add your ElevenLabs key in settings for premium voice.");
