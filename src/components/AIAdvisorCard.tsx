@@ -7,7 +7,7 @@ import { getAiAdvice } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
-import { getVoiceId } from "@/lib/voices";
+import { getVoiceId, getElevenKey } from "@/lib/voices";
 
 export function AIAdvisorCard() {
   const { transactions } = useStore();
