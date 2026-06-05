@@ -43,6 +43,7 @@ function DebtsPage() {
   const [payFor, setPayFor] = useState<Debt | null>(null);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const { transactions } = useStore();
+  const { lang } = useI18n();
   const fetchAdvice = useServerFn(getDebtAdvice);
   const [advice, setAdvice] = useState<Awaited<ReturnType<typeof getDebtAdvice>> | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
