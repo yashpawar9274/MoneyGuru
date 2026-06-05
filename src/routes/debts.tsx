@@ -769,3 +769,175 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+type ChatMsg = { role: "user" | "assistant"; content: string };
+
+function ChatSheet({
+  open, onClose, lang, debts, transactions,
+}: {
+  open: boolean;
+  onClose: () => void;
+  lang: "en" | "hi" | "es" | "fr";
+  debts: Debt[];
+  transactions: { type: "income" | "expense"; amount: number; date: string }[];
+}) {
+  const chat = useServerFn(chatDebtCoach);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      const greet: Record<typeof lang, string> = {
+        en: "Hey! Tell me your monthly income (and how often you get paid — daily / weekly / monthly), and I'll build a payoff plan with daily, weekly and monthly numbers.",
+        hi: "Hey! Apni monthly income batao (aur payment kaise milti hai — daily / weekly / monthly), main daily, weekly, monthly amount ke saath payoff plan bana dunga.",
+        es: "¡Hola! Cuéntame tu ingreso mensual (y con qué frecuencia cobras), y te armo un plan diario, semanal y mensual.",
+        fr: "Salut ! Dis-moi ton revenu mensuel (et la fréquence de paie), et je te fais un plan quotidien, hebdo et mensuel.",
+      };
+      setMessages([{ role: "assistant", content: greet[lang] }]);
+    }
+  }, [open, lang, messages.length]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 100);
+  }, [open]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    const next: ChatMsg[] = [...messages, { role: "user", content: text }];
+    setMessages(next);
+    setInput("");
+    setLoading(true);
+    try {
+      const now = Date.now();
+      const monthTx = transactions.filter((t) => +new Date(t.date) >= now - 30 * 86400000);
+      let inc = 0, exp = 0;
+      for (const t of monthTx) {
+        if (t.type === "income") inc += t.amount;
+        else exp += t.amount;
+      }
+      const res = await chat({
+        data: {
+          lang,
+          messages: next.map((m) => ({ role: m.role, content: m.content })),
+          monthlyIncome: inc || undefined,
+          monthlyExpense: exp || undefined,
+          debts: debts.map((d) => ({
+            title: d.title,
+            kind: d.kind,
+            remaining: remaining(d),
+            monthly: d.monthly,
+            planAmount: d.planAmount,
+            planFreq: d.planFreq,
+            dueInDays: daysUntil(d.dueDate),
+          })),
+        },
+      });
+      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Chat failed");
+      setMessages((m) => m.slice(0, -1));
+      setInput(text);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => setMessages([]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onClose}
+          />
+          <motion.div
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] h-[85vh] bg-card rounded-t-3xl z-50 border-t border-border flex flex-col"
+          >
+            <div className="flex justify-between items-center p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-full bg-neon/15 grid place-items-center">
+                  <Brain className="size-4 text-neon" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-display font-bold leading-tight">AI Debt Coach</h2>
+                  <p className="text-[9px] uppercase tracking-widest text-foreground/40 font-bold">Chat • Free</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={reset} className="text-[10px] uppercase tracking-widest font-bold text-foreground/50 px-2 py-1">
+                  Reset
+                </button>
+                <button onClick={onClose} className="size-9 rounded-full bg-secondary flex items-center justify-center">
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
+                    m.role === "user"
+                      ? "ml-auto bg-neon text-neon-foreground"
+                      : "bg-secondary/70 text-foreground"
+                  }`}
+                >
+                  {m.role === "assistant" ? (
+                    <div className="prose prose-invert prose-xs max-w-none [&_p]:my-1 [&_ul]:my-1 [&_strong]:text-neon">
+                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    m.content
+                  )}
+                </div>
+              ))}
+              {loading && (
+                <div className="bg-secondary/70 rounded-2xl px-3 py-2 inline-flex items-center gap-2 text-xs text-foreground/60">
+                  <Loader2 className="size-3 animate-spin" /> Thinking…
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-border flex gap-2 items-end">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                rows={1}
+                placeholder="My income is ₹25k/month, paid weekly…"
+                className="flex-1 bg-secondary rounded-2xl px-3 py-2.5 text-xs outline-none resize-none max-h-24 placeholder:text-foreground/30"
+              />
+              <button
+                onClick={send}
+                disabled={loading || !input.trim()}
+                className="size-10 rounded-2xl bg-neon text-neon-foreground flex items-center justify-center disabled:opacity-40"
+                aria-label="Send"
+              >
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
