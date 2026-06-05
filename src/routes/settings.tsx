@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LANGS, useI18n, type Lang } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
-import { Check, Trash2, Volume2, KeyRound, Loader2 } from "lucide-react";
+import { Check, Trash2, Volume2, KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { VOICES, getVoiceId, setVoiceId } from "@/lib/voices";
+import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey } from "@/lib/voices";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
