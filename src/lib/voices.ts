@@ -11,6 +11,7 @@ export const VOICES = [
 
 export const DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
 const KEY = "money_fyi_voice";
+const ELEVEN_KEY = "money_fyi_eleven_key";
 
 export function getVoiceId(): string {
   if (typeof window === "undefined") return DEFAULT_VOICE_ID;
@@ -18,4 +19,12 @@ export function getVoiceId(): string {
 }
 export function setVoiceId(id: string) {
   localStorage.setItem(KEY, id);
+}
+export function getElevenKey(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem(ELEVEN_KEY) || "";
+}
+export function setElevenKey(k: string) {
+  if (k) localStorage.setItem(ELEVEN_KEY, k);
+  else localStorage.removeItem(ELEVEN_KEY);
 }

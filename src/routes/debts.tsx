@@ -1,13 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send, ExternalLink, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
+import ReactMarkdown from "react-markdown";
 import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
 import { getDebtAdvice } from "@/lib/debt-advice.functions";
+import { chatDebtCoach } from "@/lib/debt-chat.functions";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
+import { REFERRALS } from "@/lib/referrals";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
@@ -48,6 +51,7 @@ function DebtsPage() {
   const [advice, setAdvice] = useState<Awaited<ReturnType<typeof getDebtAdvice>> | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
   const [adviceOpen, setAdviceOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const runAdvice = async () => {
     if (debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).length === 0) return toast.error("Add a debt first");
@@ -233,8 +237,48 @@ function DebtsPage() {
         </div>
         <Sparkles className="size-4 text-neon" />
       </button>
+      <button
+        onClick={() => setChatOpen(true)}
+        className="w-full mb-4 bg-card border border-border rounded-2xl p-3 flex items-center gap-3 active:scale-[0.99] transition-transform"
+      >
+        <div className="size-9 rounded-xl bg-neon/15 grid place-items-center">
+          <MessageCircle className="size-4 text-neon" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-xs font-bold">Chat with AI Coach</p>
+          <p className="text-[10px] text-foreground/60">Share your income — get daily/weekly/monthly plans</p>
+        </div>
+        <Sparkles className="size-4 text-neon" />
+      </button>
 
-
+      <div className="bg-gradient-to-br from-success/15 via-card to-card border border-success/30 rounded-2xl p-4 mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Gift className="size-3.5 text-success" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-success">Save Smarter — Referrals</p>
+        </div>
+        <p className="text-[11px] text-foreground/60 mb-3">
+          Park your daily savings in these apps. Sign up via these links — you grab the joining reward, we earn a small kickback.
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {REFERRALS.map((r) => (
+            <a
+              key={r.id}
+              href={r.url}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-secondary/60 rounded-xl p-2.5 active:scale-95 transition-transform"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg">{r.emoji}</span>
+                <span className="text-xs font-bold">{r.name}</span>
+                <ExternalLink className="size-2.5 text-foreground/40 ml-auto" />
+              </div>
+              <p className="text-[10px] text-foreground/55 mt-0.5 leading-tight">{r.tagline}</p>
+              {r.reward && <p className="text-[9px] text-success font-bold mt-1">🎁 {r.reward}</p>}
+            </a>
+          ))}
+        </div>
+      </div>
 
       {upcoming.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-3 mb-4">
@@ -362,6 +406,13 @@ function DebtsPage() {
         loading={adviceLoading}
         advice={advice}
         onClose={() => setAdviceOpen(false)}
+      />
+      <ChatSheet
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        lang={lang}
+        debts={debts}
+        transactions={transactions}
       />
     </div>
   );
@@ -716,5 +767,177 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{label}</span>
       <div className="mt-1.5">{children}</div>
     </label>
+  );
+}
+
+type ChatMsg = { role: "user" | "assistant"; content: string };
+
+function ChatSheet({
+  open, onClose, lang, debts, transactions,
+}: {
+  open: boolean;
+  onClose: () => void;
+  lang: "en" | "hi" | "es" | "fr";
+  debts: Debt[];
+  transactions: { type: "income" | "expense"; amount: number; date: string }[];
+}) {
+  const chat = useServerFn(chatDebtCoach);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      const greet: Record<typeof lang, string> = {
+        en: "Hey! Tell me your monthly income (and how often you get paid — daily / weekly / monthly), and I'll build a payoff plan with daily, weekly and monthly numbers.",
+        hi: "Hey! Apni monthly income batao (aur payment kaise milti hai — daily / weekly / monthly), main daily, weekly, monthly amount ke saath payoff plan bana dunga.",
+        es: "¡Hola! Cuéntame tu ingreso mensual (y con qué frecuencia cobras), y te armo un plan diario, semanal y mensual.",
+        fr: "Salut ! Dis-moi ton revenu mensuel (et la fréquence de paie), et je te fais un plan quotidien, hebdo et mensuel.",
+      };
+      setMessages([{ role: "assistant", content: greet[lang] }]);
+    }
+  }, [open, lang, messages.length]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 100);
+  }, [open]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    const next: ChatMsg[] = [...messages, { role: "user", content: text }];
+    setMessages(next);
+    setInput("");
+    setLoading(true);
+    try {
+      const now = Date.now();
+      const monthTx = transactions.filter((t) => +new Date(t.date) >= now - 30 * 86400000);
+      let inc = 0, exp = 0;
+      for (const t of monthTx) {
+        if (t.type === "income") inc += t.amount;
+        else exp += t.amount;
+      }
+      const res = await chat({
+        data: {
+          lang,
+          messages: next.map((m) => ({ role: m.role, content: m.content })),
+          monthlyIncome: inc || undefined,
+          monthlyExpense: exp || undefined,
+          debts: debts.map((d) => ({
+            title: d.title,
+            kind: d.kind,
+            remaining: remaining(d),
+            monthly: d.monthly,
+            planAmount: d.planAmount,
+            planFreq: d.planFreq,
+            dueInDays: daysUntil(d.dueDate),
+          })),
+        },
+      });
+      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Chat failed");
+      setMessages((m) => m.slice(0, -1));
+      setInput(text);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => setMessages([]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onClose}
+          />
+          <motion.div
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] h-[85vh] bg-card rounded-t-3xl z-50 border-t border-border flex flex-col"
+          >
+            <div className="flex justify-between items-center p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-full bg-neon/15 grid place-items-center">
+                  <Brain className="size-4 text-neon" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-display font-bold leading-tight">AI Debt Coach</h2>
+                  <p className="text-[9px] uppercase tracking-widest text-foreground/40 font-bold">Chat • Free</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={reset} className="text-[10px] uppercase tracking-widest font-bold text-foreground/50 px-2 py-1">
+                  Reset
+                </button>
+                <button onClick={onClose} className="size-9 rounded-full bg-secondary flex items-center justify-center">
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${
+                    m.role === "user"
+                      ? "ml-auto bg-neon text-neon-foreground"
+                      : "bg-secondary/70 text-foreground"
+                  }`}
+                >
+                  {m.role === "assistant" ? (
+                    <div className="prose prose-invert prose-xs max-w-none [&_p]:my-1 [&_ul]:my-1 [&_strong]:text-neon">
+                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    m.content
+                  )}
+                </div>
+              ))}
+              {loading && (
+                <div className="bg-secondary/70 rounded-2xl px-3 py-2 inline-flex items-center gap-2 text-xs text-foreground/60">
+                  <Loader2 className="size-3 animate-spin" /> Thinking…
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-border flex gap-2 items-end">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                rows={1}
+                placeholder="My income is ₹25k/month, paid weekly…"
+                className="flex-1 bg-secondary rounded-2xl px-3 py-2.5 text-xs outline-none resize-none max-h-24 placeholder:text-foreground/30"
+              />
+              <button
+                onClick={send}
+                disabled={loading || !input.trim()}
+                className="size-10 rounded-2xl bg-neon text-neon-foreground flex items-center justify-center disabled:opacity-40"
+                aria-label="Send"
+              >
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
