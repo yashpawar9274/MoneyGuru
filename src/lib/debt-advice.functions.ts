@@ -17,8 +17,15 @@ const AdviceInput = z.object({
   debts: z.array(DebtItem).max(50),
   monthlyIncome: z.number().optional(),
   monthlyExpense: z.number().optional(),
-  lang: z.enum(["en", "hi"]).default("hi"),
+  lang: z.enum(["en", "hi", "es", "fr"]).default("en"),
 });
+
+const LANG_INSTRUCTION: Record<"en" | "hi" | "es" | "fr", string> = {
+  en: "Write priority, saveWhere and summary in friendly, punchy English.",
+  hi: "Write priority, saveWhere and summary in casual Hinglish (Devanagari mixed with English), Gen-Z friendly tone.",
+  es: "Escribe priority, saveWhere y summary en español amigable y directo (tono Gen-Z). Usa ejemplos prácticos para India igual (UPI, RD, etc.).",
+  fr: "Rédige priority, saveWhere et summary en français amical et direct (ton Gen-Z). Garde les exemples pratiques pour l'Inde (UPI, RD, etc.).",
+};
 
 const AdviceSchema = z.object({
   dailyPay: z.number(),
