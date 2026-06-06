@@ -10,7 +10,7 @@ import { getDebtAdvice } from "@/lib/debt-advice.functions";
 import { chatDebtCoach } from "@/lib/debt-chat.functions";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
-import { REFERRALS } from "@/lib/referrals";
+import { REFERRAL_APPS, resolveUrl, trackClick } from "@/lib/referrals";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
@@ -252,18 +252,22 @@ function DebtsPage() {
       </button>
 
       <div className="bg-gradient-to-br from-success/15 via-card to-card border border-success/30 rounded-2xl p-4 mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Gift className="size-3.5 text-success" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-success">Save Smarter — Referrals</p>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Gift className="size-3.5 text-success" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-success">Save Smarter — Referrals</p>
+          </div>
+          <Link to="/referrals" className="text-[10px] font-bold uppercase tracking-widest text-neon">Dashboard →</Link>
         </div>
         <p className="text-[11px] text-foreground/60 mb-3">
-          Park your daily savings in these apps. Sign up via these links — you grab the joining reward, we earn a small kickback.
+          Park your daily savings in these apps. Sign up via your link — you grab the joining reward, you also earn from invites.
         </p>
         <div className="grid grid-cols-2 gap-2">
-          {REFERRALS.map((r) => (
+          {REFERRAL_APPS.map((r) => (
             <a
               key={r.id}
-              href={r.url}
+              href={resolveUrl(r)}
+              onClick={() => trackClick(r.id)}
               target="_blank"
               rel="noreferrer"
               className="bg-secondary/60 rounded-xl p-2.5 active:scale-95 transition-transform"
