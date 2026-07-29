@@ -4,7 +4,7 @@ import { useStore } from "@/lib/store";
 import { Check, Trash2, Volume2, KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey } from "@/lib/voices";
+import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getAutoSpeak, setAutoSpeak } from "@/lib/voices";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -25,6 +25,9 @@ function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [userKey, setUserKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [autoSpeak, setAutoSpeakState] = useState(true);
+
+  useEffect(() => { setAutoSpeakState(getAutoSpeak()); }, []);
 
   const probe = (key?: string) =>
     fetch("/api/tts", {
