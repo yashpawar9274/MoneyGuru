@@ -4,7 +4,7 @@ import { useStore } from "@/lib/store";
 import { Check, Trash2, Volume2, KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getAutoSpeak, setAutoSpeak } from "@/lib/voices";
+import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getAutoSpeak, setAutoSpeak, VOICE_LANGS, getVoiceLang, setVoiceLang, type VoiceLang } from "@/lib/voices";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -26,8 +26,9 @@ function SettingsPage() {
   const [userKey, setUserKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [autoSpeak, setAutoSpeakState] = useState(true);
+  const [voiceLang, setVoiceLangState] = useState<VoiceLang>("auto");
 
-  useEffect(() => { setAutoSpeakState(getAutoSpeak()); }, []);
+  useEffect(() => { setAutoSpeakState(getAutoSpeak()); setVoiceLangState(getVoiceLang()); }, []);
 
   const probe = (key?: string) =>
     fetch("/api/tts", {
@@ -114,7 +115,7 @@ function SettingsPage() {
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Auto Voice Coach</p>
             <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
-              Har kharche aur income pe AI khud Hinglish me bol dega — button dabane ki zarurat nahi.
+              AI speaks automatically on every expense and income — no button needed.
             </p>
           </div>
           <button
@@ -126,6 +127,24 @@ function SettingsPage() {
           </button>
         </div>
       </section>
+
+      <section className="mt-4 bg-card rounded-2xl p-4">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-1">Voice Language</p>
+        <p className="text-xs text-foreground/60 mb-3">The AI coach will speak in this language.</p>
+        <div className="space-y-1">
+          {VOICE_LANGS.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => { setVoiceLangState(l.id); setVoiceLang(l.id); toast.success(`Voice language: ${l.label}`); }}
+              className="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-secondary/50"
+            >
+              <span className="text-sm">{l.native} <span className="text-foreground/40 ml-2">{l.label}</span></span>
+              {voiceLang === l.id && <Check className="size-4 text-neon" />}
+            </button>
+          ))}
+        </div>
+      </section>
+
 
 
 

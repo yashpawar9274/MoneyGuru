@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getTxVoiceLine } from "@/lib/tx-voice.functions";
-import { getVoiceId, getElevenKey, getAutoSpeak } from "@/lib/voices";
+import { getVoiceId, getElevenKey, getAutoSpeak, getVoiceLang, bcp47 } from "@/lib/voices";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ export function AutoVoiceAgent() {
   txRef.current = transactions;
 
   useEffect(() => {
-    const speak = async (text: string) => {
+    const speak = async (text: string, spokenLang: "en" | "hi" | "es" | "fr") => {
       try {
         const r = await fetch("/api/tts", {
           method: "POST",
@@ -32,7 +32,7 @@ export function AutoVoiceAgent() {
       } catch {
         try {
           const u = new SpeechSynthesisUtterance(text);
-          u.lang = lang === "hi" ? "hi-IN" : lang === "es" ? "es-ES" : lang === "fr" ? "fr-FR" : "en-IN";
+          u.lang = bcp47(spokenLang);
           speechSynthesis.cancel();
           speechSynthesis.speak(u);
         } catch {
@@ -40,6 +40,7 @@ export function AutoVoiceAgent() {
         }
       }
     };
+
 
     const onAdded = async (e: Event) => {
       if (!getAutoSpeak() || busy.current) return;
@@ -58,6 +59,8 @@ export function AutoVoiceAgent() {
             else todaySpend += t.amount;
           }
         }
+        const vl = getVoiceLang();
+        const spokenLang = vl === "auto" ? lang : vl;
         const { line } = await getLine({
           data: {
             type: tx.type,
@@ -67,11 +70,11 @@ export function AutoVoiceAgent() {
             todaySpend,
             todayIncome,
             balance: income - expense,
-            lang,
+            lang: spokenLang,
           },
         });
         toast(line, { icon: "🔊" });
-        await speak(line);
+        await speak(line, spokenLang);
       } catch {
         /* stay silent on failure */
       } finally {
