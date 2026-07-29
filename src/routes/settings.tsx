@@ -128,6 +128,24 @@ function SettingsPage() {
         </div>
       </section>
 
+      <section className="mt-4 bg-card rounded-2xl p-4">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-1">Voice Language</p>
+        <p className="text-xs text-foreground/60 mb-3">The AI coach will speak in this language.</p>
+        <div className="space-y-1">
+          {VOICE_LANGS.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => { setVoiceLangState(l.id); setVoiceLang(l.id); toast.success(`Voice language: ${l.label}`); }}
+              className="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-secondary/50"
+            >
+              <span className="text-sm">{l.native} <span className="text-foreground/40 ml-2">{l.label}</span></span>
+              {voiceLang === l.id && <Check className="size-4 text-neon" />}
+            </button>
+          ))}
+        </div>
+      </section>
+
+
 
 
       <section className="mt-4 bg-card rounded-2xl p-4">
