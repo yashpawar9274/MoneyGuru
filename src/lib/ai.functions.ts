@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { generateText, Output } from "ai";
+import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
 const TxSchema = z.object({
@@ -39,22 +39,50 @@ If income is healthy and overspending is low, hype the user up.
 USER SPENDING SUMMARY (last 30 days):
 ${summary}
 
-Reply as a single short message the user will hear via voice. No emojis at the start. Plain text.`;
+Return ONLY a single JSON object (no markdown fences, no prose) with EXACTLY these keys:
+{
+  "message": string,      // the short spoken message (max 2 sentences), plain text, no leading emoji
+  "alertLevel": "good" | "watch" | "danger",
+  "tipCategory": string   // the category the tip is about
+}`;
 
-    const { output } = await generateText({
+    const { text } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
-      output: Output.object({
-        schema: z.object({
-          message: z.string(),
-          alertLevel: z.enum(["good", "watch", "danger"]),
-          tipCategory: z.string(),
-        }),
-      }),
       prompt,
     });
 
-    return output;
+    const parsed = ResultSchema.safeParse(extractJson(text));
+    if (parsed.success) return parsed.data;
+
+    const fallback = text.replace(/```[a-z]*|```/gi, "").trim();
+    if (!fallback) throw new Error("AI returned an empty response. Try again.");
+    return { message: fallback.slice(0, 400), alertLevel: "good" as const, tipCategory: "general" };
   });
+
+const ResultSchema = z.object({
+  message: z.string(),
+  alertLevel: z.enum(["good", "watch", "danger"]).catch("good"),
+  tipCategory: z.string().catch("general"),
+});
+
+function extractJson(text: string): unknown {
+  let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = cleaned.search(/[{[]/);
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end === -1) return null;
+  cleaned = cleaned.substring(start, end + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    try {
+      return JSON.parse(
+        cleaned.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, ""),
+      );
+    } catch {
+      return null;
+    }
+  }
+}
 
 function summarize(txs: z.infer<typeof TxSchema>[]) {
   const byCat: Record<string, number> = {};

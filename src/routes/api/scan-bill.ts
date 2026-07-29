@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { generateText, Output } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -28,18 +28,17 @@ export const Route = createFileRoute("/api/scan-bill")({
             ? imageBase64
             : `data:image/jpeg;base64,${imageBase64}`;
 
-          const { output } = await generateText({
+          const { text } = await generateText({
             model: gateway("google/gemini-3-flash-preview"),
-            output: Output.object({
-              schema: Schema,
-            }),
             messages: [
               {
                 role: "user",
                 content: [
                   {
                     type: "text",
-                    text: "Extract the merchant name, total amount (just the number, no currency), and best-fit category from this bill/receipt. If unsure, use 'other'.",
+                    text: `Extract the merchant name, total amount (number only, no currency) and best-fit category from this bill/receipt.
+Return ONLY a JSON object: {"merchant": string, "total": number, "category": "food"|"transport"|"shopping"|"entertainment"|"bills"|"health"|"education"|"other", "date": string}
+If unsure about category use "other".`,
                   },
                   { type: "image", image: dataUrl },
                 ],
@@ -47,7 +46,9 @@ export const Route = createFileRoute("/api/scan-bill")({
             ],
           });
 
-          return Response.json(output);
+          const parsed = Schema.safeParse(extractJson(text));
+          if (!parsed.success) return new Response("Could not read the bill. Try a clearer photo.", { status: 422 });
+          return Response.json(parsed.data);
         } catch (e) {
           const msg = e instanceof Error ? e.message : "Scan failed";
           return new Response(msg, { status: 500 });
@@ -56,3 +57,20 @@ export const Route = createFileRoute("/api/scan-bill")({
     },
   },
 });
+
+function extractJson(text: string): unknown {
+  let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = cleaned.search(/[{[]/);
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end === -1) return null;
+  cleaned = cleaned.substring(start, end + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    try {
+      return JSON.parse(cleaned.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, ""));
+    } catch {
+      return null;
+    }
+  }
+}
