@@ -28,3 +28,13 @@ export function setElevenKey(k: string) {
   if (k) localStorage.setItem(ELEVEN_KEY, k);
   else localStorage.removeItem(ELEVEN_KEY);
 }
+
+const AUTO_KEY = "money_fyi_autospeak";
+
+export function getAutoSpeak(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(AUTO_KEY) !== "0";
+}
+export function setAutoSpeak(on: boolean) {
+  localStorage.setItem(AUTO_KEY, on ? "1" : "0");
+}
