@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import { generateText, Output } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -57,3 +57,20 @@ If unsure about category use "other".`,
     },
   },
 });
+
+function extractJson(text: string): unknown {
+  let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = cleaned.search(/[{[]/);
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end === -1) return null;
+  cleaned = cleaned.substring(start, end + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    try {
+      return JSON.parse(cleaned.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, ""));
+    } catch {
+      return null;
+    }
+  }
+}
