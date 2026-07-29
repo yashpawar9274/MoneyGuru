@@ -57,8 +57,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addTransaction = useCallback((tx: Omit<Transaction, "id">) => {
     const next: Transaction = { ...tx, id: crypto.randomUUID() };
     setTransactions((prev) => [next, ...prev]);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("money-fyi:tx-added", { detail: next }));
+    }
     return next;
   }, []);
+
 
   const removeTransaction = useCallback((id: string) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id));

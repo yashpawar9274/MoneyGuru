@@ -4,7 +4,7 @@ import { useStore } from "@/lib/store";
 import { Check, Trash2, Volume2, KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey } from "@/lib/voices";
+import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getAutoSpeak, setAutoSpeak } from "@/lib/voices";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -25,6 +25,9 @@ function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [userKey, setUserKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [autoSpeak, setAutoSpeakState] = useState(true);
+
+  useEffect(() => { setAutoSpeakState(getAutoSpeak()); }, []);
 
   const probe = (key?: string) =>
     fetch("/api/tts", {
@@ -105,6 +108,26 @@ function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <section className="mt-4 bg-card rounded-2xl p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Auto Voice Coach</p>
+            <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
+              Har kharche aur income pe AI khud Hinglish me bol dega — button dabane ki zarurat nahi.
+            </p>
+          </div>
+          <button
+            onClick={() => { const n = !autoSpeak; setAutoSpeakState(n); setAutoSpeak(n); }}
+            className={`shrink-0 w-12 h-7 rounded-full relative transition-colors ${autoSpeak ? "bg-neon" : "bg-secondary"}`}
+            aria-label="Toggle auto voice"
+          >
+            <span className={`absolute top-1 size-5 rounded-full bg-background transition-all ${autoSpeak ? "left-6" : "left-1"}`} />
+          </button>
+        </div>
+      </section>
+
+
 
       <section className="mt-4 bg-card rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
