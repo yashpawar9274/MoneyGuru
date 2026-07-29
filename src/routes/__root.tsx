@@ -12,6 +12,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "@/lib/store";
+import { AutoVoiceAgent } from "@/components/AutoVoiceAgent";
+
 import { DebtsProvider } from "@/lib/debts";
 import { I18nProvider } from "@/lib/i18n";
 import { SplashScreen } from "@/components/SplashScreen";
