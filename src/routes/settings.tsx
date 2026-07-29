@@ -26,8 +26,9 @@ function SettingsPage() {
   const [userKey, setUserKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [autoSpeak, setAutoSpeakState] = useState(true);
+  const [voiceLang, setVoiceLangState] = useState<VoiceLang>("auto");
 
-  useEffect(() => { setAutoSpeakState(getAutoSpeak()); }, []);
+  useEffect(() => { setAutoSpeakState(getAutoSpeak()); setVoiceLangState(getVoiceLang()); }, []);
 
   const probe = (key?: string) =>
     fetch("/api/tts", {
