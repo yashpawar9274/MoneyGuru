@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getTxVoiceLine } from "@/lib/tx-voice.functions";
-import { getVoiceId, getElevenKey, getAutoSpeak } from "@/lib/voices";
+import { getVoiceId, getElevenKey, getAutoSpeak, getVoiceLang, bcp47 } from "@/lib/voices";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
