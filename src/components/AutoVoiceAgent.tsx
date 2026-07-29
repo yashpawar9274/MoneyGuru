@@ -19,7 +19,7 @@ export function AutoVoiceAgent() {
   txRef.current = transactions;
 
   useEffect(() => {
-    const speak = async (text: string) => {
+    const speak = async (text: string, spokenLang: "en" | "hi" | "es" | "fr") => {
       try {
         const r = await fetch("/api/tts", {
           method: "POST",
@@ -32,7 +32,7 @@ export function AutoVoiceAgent() {
       } catch {
         try {
           const u = new SpeechSynthesisUtterance(text);
-          u.lang = lang === "hi" ? "hi-IN" : lang === "es" ? "es-ES" : lang === "fr" ? "fr-FR" : "en-IN";
+          u.lang = bcp47(spokenLang);
           speechSynthesis.cancel();
           speechSynthesis.speak(u);
         } catch {
@@ -40,6 +40,7 @@ export function AutoVoiceAgent() {
         }
       }
     };
+
 
     const onAdded = async (e: Event) => {
       if (!getAutoSpeak() || busy.current) return;
