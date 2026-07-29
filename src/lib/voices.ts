@@ -38,3 +38,26 @@ export function getAutoSpeak(): boolean {
 export function setAutoSpeak(on: boolean) {
   localStorage.setItem(AUTO_KEY, on ? "1" : "0");
 }
+
+/** Language the AI voice speaks in. "auto" follows the app language. */
+export type VoiceLang = "auto" | "en" | "hi" | "es" | "fr";
+const VOICE_LANG_KEY = "money_fyi_voice_lang";
+
+export const VOICE_LANGS: { id: VoiceLang; label: string; native: string }[] = [
+  { id: "auto", label: "Follow app language", native: "Auto" },
+  { id: "en", label: "English", native: "English" },
+  { id: "hi", label: "Hinglish / Hindi", native: "हिंदी" },
+  { id: "es", label: "Spanish", native: "Español" },
+  { id: "fr", label: "French", native: "Français" },
+];
+
+export function getVoiceLang(): VoiceLang {
+  if (typeof window === "undefined") return "auto";
+  return (localStorage.getItem(VOICE_LANG_KEY) as VoiceLang) || "auto";
+}
+export function setVoiceLang(l: VoiceLang) {
+  localStorage.setItem(VOICE_LANG_KEY, l);
+}
+export function bcp47(l: "en" | "hi" | "es" | "fr") {
+  return l === "hi" ? "hi-IN" : l === "es" ? "es-ES" : l === "fr" ? "fr-FR" : "en-IN";
+}
