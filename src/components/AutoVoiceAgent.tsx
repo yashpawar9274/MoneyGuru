@@ -59,6 +59,8 @@ export function AutoVoiceAgent() {
             else todaySpend += t.amount;
           }
         }
+        const vl = getVoiceLang();
+        const spokenLang = vl === "auto" ? lang : vl;
         const { line } = await getLine({
           data: {
             type: tx.type,
@@ -68,11 +70,11 @@ export function AutoVoiceAgent() {
             todaySpend,
             todayIncome,
             balance: income - expense,
-            lang,
+            lang: spokenLang,
           },
         });
         toast(line, { icon: "🔊" });
-        await speak(line);
+        await speak(line, spokenLang);
       } catch {
         /* stay silent on failure */
       } finally {
