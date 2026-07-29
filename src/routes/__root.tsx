@@ -106,6 +106,8 @@ function RootComponent() {
         <StoreProvider>
           <DebtsProvider>
             <SplashScreen />
+            <AutoVoiceAgent />
+
             <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
               <Outlet />
             </div>
