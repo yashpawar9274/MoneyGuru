@@ -115,7 +115,7 @@ function SettingsPage() {
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Auto Voice Coach</p>
             <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
-              Har kharche aur income pe AI khud Hinglish me bol dega — button dabane ki zarurat nahi.
+              AI speaks automatically on every expense and income — no button needed.
             </p>
           </div>
           <button
