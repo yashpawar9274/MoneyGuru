@@ -151,6 +151,42 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount_inr: number
+          created_at: string
+          id: string
+          order_id: string
+          plan: string
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_inr: number
+          created_at?: string
+          id?: string
+          order_id: string
+          plan: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_inr?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          plan?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -295,6 +331,7 @@ export type Database = {
     }
     Functions: {
       activate_pro: { Args: never; Returns: undefined }
+      apply_paid_order: { Args: { p_order_id: string }; Returns: string }
       bootstrap_account: { Args: never; Returns: undefined }
     }
     Enums: {
