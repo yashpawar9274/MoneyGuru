@@ -139,12 +139,22 @@ function Pricing() {
           <ArrowLeft className="size-4" />
         </button>
         <h1 className="text-2xl font-display font-bold">Pricing</h1>
-        {mode === "sandbox" && ready && (
-          <span className="ml-auto rounded-full bg-secondary px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground/60">
-            test mode
+        {ready && (
+          <span
+            className={`ml-auto rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
+              mode === "production" ? "bg-neon/15 text-neon" : "bg-secondary text-foreground/60"
+            }`}
+          >
+            {mode === "production" ? "live payments" : "test mode"}
           </span>
         )}
       </div>
+
+      {keyError && (
+        <div className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+          {keyError}. Update your Cashfree keys so live payments succeed.
+        </div>
+      )}
 
       <p className="mt-2 text-sm text-foreground/60 leading-relaxed">
         Paisa track karo, AI se plan banao. Cancel anytime — payments secured by Cashfree (UPI, cards,
