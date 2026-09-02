@@ -96,18 +96,27 @@ The APK ships the same paywall as the web app:
 - After paying, return to the app and tap **"I've paid — activate Pro on this
   device"**, or sign in so the cloud subscription syncs.
 
-### Cashfree webhook (one-time, in the Cashfree dashboard)
+### Cashfree webhook (one-time, in the **Production** Cashfree dashboard)
 Developers → Webhooks → Add endpoint:
 ```
-https://mmoneyguru.lovable.app/api/public/cashfree-webhook
+https://moneyguruai.dev/api/public/cashfree-webhook
 ```
 Subscribe to `PAYMENT_SUCCESS_WEBHOOK` and `PAYMENT_FAILED_WEBHOOK`. The route
 verifies the `x-webhook-signature` HMAC before activating a plan, then calls
-`apply_paid_order`. Test with a sandbox order (keys in `CASHFREE_ENV=sandbox`),
-UPI test VPA `testsuccess@gocash`, then check Settings → plan shows **PRO**.
+`apply_paid_order`. Live keys are configured (`CASHFREE_ENV=production`), so the
+Pricing page shows a **LIVE PAYMENTS** badge and every order charges real money.
+
+### Live payment + trial→Pro verification checklist
+1. Web: open `https://moneyguruai.dev/pricing` → badge must read **LIVE PAYMENTS**
+   (a red banner means the keys were rejected — re-enter them).
+2. Pay ₹100 with UPI. After redirect the page verifies the order and the plan flips
+   to **PRO** (also visible in Settings).
+3. APK: `cd mobile && eas build -p android --profile preview`, install the printed
+   APK, confirm the 24h countdown pill, tap **PRO** → checkout opens on
+   `moneyguruai.dev`, pay, return and tap **I've paid** (or sign in) → paywall gone.
 
 ### Point at a different backend
-Edit `mobile/app.json` → `expo.extra.apiBaseUrl`.
+Edit `mobile/app.json` → `expo.extra.apiBaseUrl` (currently `https://moneyguruai.dev`).
 
 Full mobile docs: [`mobile/README.md`](mobile/README.md).
 
