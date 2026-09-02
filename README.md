@@ -69,19 +69,48 @@ npx expo start --android      # Android emulator / device
 npx expo start --ios          # iOS simulator (macOS)
 ```
 
-### Production build (EAS)
+### Production build (EAS) → installable APK
 ```bash
+cd mobile
 npm install -g eas-cli
-eas login
+eas login                                  # your own Expo account
 eas build:configure
-eas build -p android          # APK / AAB for Play Store
-eas build -p ios              # IPA for App Store
+eas build -p android --profile preview     # produces a directly installable .apk
+eas build -p ios                           # IPA for App Store
 ```
+`--profile preview` (or any profile with `"android": { "buildType": "apk" }` in
+`eas.json`) is what gives you a sideloadable APK; the default `production`
+profile outputs an `.aab` for Play Store only. When the build finishes, EAS
+prints a download link — open it on the phone, install, and allow
+"install from unknown sources".
+
+### Trial → Pro in the APK
+The APK ships the same paywall as the web app:
+- On first launch a **24-hour trial** starts (timestamp in AsyncStorage); a live
+  countdown pill sits at the top of every screen.
+- The **PRO** tab is a native pricing screen with ₹100/month and ₹999 lifetime.
+  Tapping a plan opens the hosted Cashfree checkout at
+  `{apiBaseUrl}/pricing?plan=…&from=apk` (UPI / card / netbanking).
+- When the trial expires the app locks behind a full-screen paywall and speaks a
+  Hinglish message via native TTS.
+- After paying, return to the app and tap **"I've paid — activate Pro on this
+  device"**, or sign in so the cloud subscription syncs.
+
+### Cashfree webhook (one-time, in the Cashfree dashboard)
+Developers → Webhooks → Add endpoint:
+```
+https://mmoneyguru.lovable.app/api/public/cashfree-webhook
+```
+Subscribe to `PAYMENT_SUCCESS_WEBHOOK` and `PAYMENT_FAILED_WEBHOOK`. The route
+verifies the `x-webhook-signature` HMAC before activating a plan, then calls
+`apply_paid_order`. Test with a sandbox order (keys in `CASHFREE_ENV=sandbox`),
+UPI test VPA `testsuccess@gocash`, then check Settings → plan shows **PRO**.
 
 ### Point at a different backend
 Edit `mobile/app.json` → `expo.extra.apiBaseUrl`.
 
 Full mobile docs: [`mobile/README.md`](mobile/README.md).
+
 
 ---
 
