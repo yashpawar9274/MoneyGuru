@@ -98,6 +98,22 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AuthGate({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  if (!hydrated || loading) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="size-8 rounded-full border-2 border-neon border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return <AuthScreen />;
+  return <>{children}</>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [addOpen, setAddOpen] = useState(false);
@@ -105,23 +121,28 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <StoreProvider>
-          <DebtsProvider>
-            <SplashScreen />
-            <AutoVoiceAgent />
+        <AuthProvider>
+          <AuthGate>
+            <StoreProvider>
+              <DebtsProvider>
+                <SplashScreen />
+                <AutoVoiceAgent />
 
-            <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
-              <Outlet />
-            </div>
-            <BottomNav onAdd={() => setAddOpen(true)} />
-            <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
-            <Toaster
-              theme="dark" position="top-center"
-              toastOptions={{ style: { background: "hsl(240 5% 12%)", color: "white", border: "1px solid hsl(240 5% 20%)" } }}
-            />
-          </DebtsProvider>
-        </StoreProvider>
+                <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
+                  <Outlet />
+                </div>
+                <BottomNav onAdd={() => setAddOpen(true)} />
+                <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
+              </DebtsProvider>
+            </StoreProvider>
+          </AuthGate>
+        </AuthProvider>
+        <Toaster
+          theme="dark" position="top-center"
+          toastOptions={{ style: { background: "hsl(240 5% 12%)", color: "white", border: "1px solid hsl(240 5% 20%)" } }}
+        />
       </I18nProvider>
     </QueryClientProvider>
   );
 }
+
