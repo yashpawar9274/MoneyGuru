@@ -91,6 +91,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void load(uid);
   }, [session?.user.id, load]);
 
+  // Realtime (websocket) plan/trial sync so lock + unlock happen instantly on every device.
+  useEffect(() => {
+    const uid = session?.user.id;
+    if (!uid) return;
+    const channel = supabase
+      .channel(`sub-${uid}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${uid}` },
+        (payload) => {
+          const row = payload.new as Subscription | null;
+          if (row) setSubscription(row);
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [session?.user.id]);
+
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
