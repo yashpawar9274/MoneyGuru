@@ -6,6 +6,7 @@ import { ArrowLeft, Check, Crown, Loader2, ShieldCheck, Sparkles, Zap } from "lu
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { createCheckout, confirmCheckout, paymentsStatus, type PaidPlan } from "@/lib/payments.functions";
+import { CHECKOUT_ORIGIN, isCheckoutOrigin } from "@/lib/payment-origin";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -40,14 +41,12 @@ declare global {
   }
 }
 
-/** Domain whitelisted in the Cashfree dashboard — checkout must run from here. */
-const LIVE_ORIGIN = "https://moneyguruai.dev";
+/**
+ * Checkout origin comes from VITE_CASHFREE_CHECKOUT_ORIGIN (public value only).
+ * Cashfree API credentials live server-side and never reach the browser.
+ */
+const LIVE_ORIGIN = CHECKOUT_ORIGIN;
 
-/** True when the current origin is allowed to launch Cashfree checkout. */
-function isCheckoutOrigin() {
-  const h = window.location.hostname;
-  return h === "moneyguruai.dev" || h === "www.moneyguruai.dev" || h === "localhost";
-}
 
 function loadSdk(): Promise<NonNullable<Window["Cashfree"]>> {
   return new Promise((resolve, reject) => {
@@ -114,6 +113,18 @@ function Pricing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // Arrived from a non-whitelisted origin with ?plan=… — resume that checkout here.
+  useEffect(() => {
+    if (!user || ready !== true) return;
+    const wanted = new URLSearchParams(window.location.search).get("plan");
+    if (wanted !== "pro" && wanted !== "lifetime") return;
+    if (!isCheckoutOrigin(mode)) return;
+    window.history.replaceState({}, "", "/pricing");
+    void pay(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, ready, mode]);
+
+
   const pay = async (plan: PaidPlan) => {
     if (!user) {
       toast.error("Sign in first to subscribe");
@@ -121,7 +132,7 @@ function Pricing() {
     }
     // Cashfree only allows checkout from whitelisted domains. Preview/dev origins
     // are not whitelisted, so send the user to the live domain to pay.
-    if (!isCheckoutOrigin()) {
+    if (!isCheckoutOrigin(mode)) {
       toast.info("Opening secure checkout on moneyguruai.dev…");
       window.location.href = `${LIVE_ORIGIN}/pricing?plan=${plan}`;
       return;
