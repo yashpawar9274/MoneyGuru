@@ -110,11 +110,18 @@ function Pricing() {
       toast.error("Sign in first to subscribe");
       return;
     }
+    // Cashfree only allows checkout from whitelisted domains. Preview/dev origins
+    // are not whitelisted, so send the user to the live domain to pay.
+    if (!isCheckoutOrigin()) {
+      toast.info("Opening secure checkout on moneyguruai.dev…");
+      window.location.href = `${LIVE_ORIGIN}/pricing?plan=${plan}`;
+      return;
+    }
     setBusy(plan);
     try {
       const [sdk, order] = await Promise.all([
         loadSdk(),
-        start({ data: { plan, returnUrl: `${window.location.origin}/pricing` } }),
+        start({ data: { plan, returnUrl: `${LIVE_ORIGIN}/pricing` } }),
       ]);
       const cf = sdk({ mode: order.mode === "production" ? "production" : "sandbox" });
       await cf.checkout({ paymentSessionId: order.paymentSessionId, redirectTarget: "_self" });
