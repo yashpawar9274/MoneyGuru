@@ -3,6 +3,7 @@ import { LANGS, useI18n, type Lang } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { Check, Trash2, Volume2, KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getAutoSpeak, setAutoSpeak, VOICE_LANGS, getVoiceLang, setVoiceLang, type VoiceLang } from "@/lib/voices";
 
@@ -93,6 +94,10 @@ function SettingsPage() {
         <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("settings")}</p>
         <h1 className="text-2xl font-display font-bold mt-1">Make it yours</h1>
       </header>
+
+      <AccountCard />
+
+
 
       <section className="bg-card rounded-2xl p-4">
         <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-3">{t("language")}</p>
@@ -250,5 +255,96 @@ function SettingsPage() {
         MONEY.FYI · v1.0
       </p>
     </div>
+  );
+}
+
+function AccountCard() {
+  const { user, profile, subscription, isPro, signOut, activatePro, updateProfile } = useAuth();
+  const [name, setName] = useState(profile?.full_name ?? "");
+  const [saving, setSaving] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { setName(profile?.full_name ?? ""); }, [profile?.full_name]);
+
+  const plan = subscription?.plan ?? "free";
+  const initials = (profile?.full_name || user?.email || "?").slice(0, 2).toUpperCase();
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await updateProfile({ full_name: name.trim() });
+      toast.success("Profile updated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const upgrade = async () => {
+    setBusy(true);
+    try {
+      await activatePro();
+      toast.success("Pro activated — ₹100/month");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upgrade failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="mb-4 bg-card rounded-2xl p-4">
+      <div className="flex items-center gap-3">
+        <div className="size-11 rounded-full bg-accent grid place-items-center text-xs font-bold text-accent-foreground">
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold truncate">{profile?.full_name || "Your profile"}</p>
+          <p className="text-xs text-foreground/50 truncate">{user?.email}</p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+            isPro ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"
+          }`}
+        >
+          {plan}
+        </span>
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Display name"
+          className="flex-1 rounded-xl bg-secondary/60 px-3 py-2.5 text-sm outline-none placeholder:text-foreground/40"
+        />
+        <button
+          onClick={save}
+          disabled={saving}
+          className="rounded-xl bg-secondary px-4 text-sm font-semibold active:scale-95 transition-transform disabled:opacity-60"
+        >
+          Save
+        </button>
+      </div>
+
+      {!isPro && (
+        <button
+          onClick={upgrade}
+          disabled={busy}
+          className="mt-3 w-full rounded-xl bg-neon py-3 text-sm font-bold text-neon-foreground active:scale-[0.98] transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {busy && <Loader2 className="size-4 animate-spin" />}
+          Upgrade to Pro — ₹100/month
+        </button>
+      )}
+
+      <button
+        onClick={() => void signOut()}
+        className="mt-3 w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground/70 active:scale-[0.98] transition-transform"
+      >
+        Sign out
+      </button>
+    </section>
   );
 }
