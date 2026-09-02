@@ -40,6 +40,15 @@ declare global {
   }
 }
 
+/** Domain whitelisted in the Cashfree dashboard — checkout must run from here. */
+const LIVE_ORIGIN = "https://moneyguruai.dev";
+
+/** True when the current origin is allowed to launch Cashfree checkout. */
+function isCheckoutOrigin() {
+  const h = window.location.hostname;
+  return h === "moneyguruai.dev" || h === "www.moneyguruai.dev" || h === "localhost";
+}
+
 function loadSdk(): Promise<NonNullable<Window["Cashfree"]>> {
   return new Promise((resolve, reject) => {
     if (window.Cashfree) return resolve(window.Cashfree);
