@@ -26,6 +26,29 @@ function cfHeaders(appId: string, secret: string) {
   };
 }
 
+/**
+ * Cashfree returns "authentication Failed" when the keys belong to the other
+ * environment. Try the configured env first, then fall back to the other one.
+ */
+async function cfFetch(path: string, init: RequestInit = {}) {
+  const { appId, secret, env } = creds();
+  const order: string[] = env === "production" ? ["production", "sandbox"] : ["sandbox", "production"];
+  let last: { status: number; body: any; env: string } | null = null;
+  for (const e of order) {
+    const res = await fetch(`${cashfreeBase(e)}${path}`, {
+      ...init,
+      headers: { ...cfHeaders(appId, secret), ...(init.headers || {}) },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) return { ok: true as const, body, env: e };
+    last = { status: res.status, body, env: e };
+    const msg = String(body?.message || "").toLowerCase();
+    if (!(res.status === 401 || res.status === 403 || msg.includes("authentication"))) break;
+  }
+  return { ok: false as const, ...last! };
+}
+
+
 /** Creates a Cashfree order and returns the payment session used by the checkout SDK. */
 export const createCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -35,15 +58,13 @@ export const createCheckout = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { appId, secret, env } = creds();
     const amount = PLAN_PRICE_INR[data.plan];
     const orderId = `mfy_${data.plan}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const email = context.claims?.email as string | undefined;
     const phone = (data.phone || "").replace(/\D/g, "").slice(-10) || "9999999999";
 
-    const res = await fetch(`${cashfreeBase(env)}/pg/orders`, {
+    const res = await cfFetch("/pg/orders", {
       method: "POST",
-      headers: cfHeaders(appId, secret),
       body: JSON.stringify({
         order_id: orderId,
         order_amount: amount,
@@ -60,10 +81,16 @@ export const createCheckout = createServerFn({ method: "POST" })
       }),
     });
 
-    const body = (await res.json()) as { payment_session_id?: string; message?: string };
-    if (!res.ok || !body.payment_session_id) {
-      console.error("cashfree order failed", res.status, body?.message);
-      throw new Error(body?.message || "Could not start checkout. Please try again.");
+    const sessionId = res.ok ? (res.body as { payment_session_id?: string }).payment_session_id : undefined;
+    if (!res.ok || !sessionId) {
+      const msg = String((res.body as { message?: string })?.message || "");
+      console.error("cashfree order failed", res.ok ? 200 : res.status, msg);
+      if (/authentication/i.test(msg)) {
+        throw new Error(
+          "Cashfree rejected the API keys. Check that CASHFREE_APP_ID / CASHFREE_SECRET_KEY match CASHFREE_ENV (sandbox vs production).",
+        );
+      }
+      throw new Error(msg || "Could not start checkout. Please try again.");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -76,8 +103,13 @@ export const createCheckout = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
 
-    return { orderId, paymentSessionId: body.payment_session_id, mode: env === "production" ? "production" : "sandbox" as const };
+    return {
+      orderId,
+      paymentSessionId: sessionId,
+      mode: (res.env === "production" ? "production" : "sandbox") as "production" | "sandbox",
+    };
   });
+
 
 /** Verifies an order with Cashfree and activates the plan when it is paid. */
 export const confirmCheckout = createServerFn({ method: "POST" })
@@ -87,7 +119,6 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { appId, secret, env } = creds();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: row } = await supabaseAdmin
@@ -98,11 +129,10 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     if (!row || row.user_id !== context.userId) return { status: "unknown" as const };
     if (row.status === "paid") return { status: "paid" as const, plan: row.plan as PaidPlan };
 
-    const res = await fetch(`${cashfreeBase(env)}/pg/orders/${encodeURIComponent(data.orderId)}`, {
-      headers: cfHeaders(appId, secret),
-    });
-    const order = (await res.json()) as { order_status?: string };
+    const res = await cfFetch(`/pg/orders/${encodeURIComponent(data.orderId)}`);
+    const order = (res.body || {}) as { order_status?: string };
     if (!res.ok) return { status: "pending" as const };
+
 
     if (order.order_status === "PAID") {
       const { error } = await supabaseAdmin.rpc("apply_paid_order", { p_order_id: data.orderId });
