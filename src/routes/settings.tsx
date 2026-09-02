@@ -94,6 +94,10 @@ function SettingsPage() {
         <h1 className="text-2xl font-display font-bold mt-1">Make it yours</h1>
       </header>
 
+      <AccountCard />
+
+
+
       <section className="bg-card rounded-2xl p-4">
         <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-3">{t("language")}</p>
         <div className="space-y-1">
