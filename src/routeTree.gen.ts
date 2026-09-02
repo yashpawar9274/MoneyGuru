@@ -16,6 +16,7 @@ import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
+import { Route as ApiPublicCashfreeWebhookRouteImport } from './routes/api/public/cashfree-webhook'
 import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -53,6 +54,12 @@ const ApiScanBillRoute = ApiScanBillRouteImport.update({
   path: '/api/scan-bill',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCashfreeWebhookRoute =
+  ApiPublicCashfreeWebhookRouteImport.update({
+    id: '/api/public/cashfree-webhook',
+    path: '/api/public/cashfree-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
   id: '/api/public/ai-advice',
   path: '/api/public/ai-advice',
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
+  '/api/public/cashfree-webhook': typeof ApiPublicCashfreeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +86,7 @@ export interface FileRoutesByTo {
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
+  '/api/public/cashfree-webhook': typeof ApiPublicCashfreeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +98,7 @@ export interface FileRoutesById {
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
+  '/api/public/cashfree-webhook': typeof ApiPublicCashfreeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
     | '/api/scan-bill'
     | '/api/tts'
     | '/api/public/ai-advice'
+    | '/api/public/cashfree-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/api/scan-bill'
     | '/api/tts'
     | '/api/public/ai-advice'
+    | '/api/public/cashfree-webhook'
   id:
     | '__root__'
     | '/'
@@ -121,6 +133,7 @@ export interface FileRouteTypes {
     | '/api/scan-bill'
     | '/api/tts'
     | '/api/public/ai-advice'
+    | '/api/public/cashfree-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +145,7 @@ export interface RootRouteChildren {
   ApiScanBillRoute: typeof ApiScanBillRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ApiPublicAiAdviceRoute: typeof ApiPublicAiAdviceRoute
+  ApiPublicCashfreeWebhookRoute: typeof ApiPublicCashfreeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiScanBillRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cashfree-webhook': {
+      id: '/api/public/cashfree-webhook'
+      path: '/api/public/cashfree-webhook'
+      fullPath: '/api/public/cashfree-webhook'
+      preLoaderRoute: typeof ApiPublicCashfreeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ai-advice': {
       id: '/api/public/ai-advice'
       path: '/api/public/ai-advice'
@@ -204,6 +225,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiScanBillRoute: ApiScanBillRoute,
   ApiTtsRoute: ApiTtsRoute,
   ApiPublicAiAdviceRoute: ApiPublicAiAdviceRoute,
+  ApiPublicCashfreeWebhookRoute: ApiPublicCashfreeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
