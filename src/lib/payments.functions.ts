@@ -26,6 +26,29 @@ function cfHeaders(appId: string, secret: string) {
   };
 }
 
+/**
+ * Cashfree returns "authentication Failed" when the keys belong to the other
+ * environment. Try the configured env first, then fall back to the other one.
+ */
+async function cfFetch(path: string, init: RequestInit = {}) {
+  const { appId, secret, env } = creds();
+  const order: string[] = env === "production" ? ["production", "sandbox"] : ["sandbox", "production"];
+  let last: { status: number; body: any; env: string } | null = null;
+  for (const e of order) {
+    const res = await fetch(`${cashfreeBase(e)}${path}`, {
+      ...init,
+      headers: { ...cfHeaders(appId, secret), ...(init.headers || {}) },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) return { ok: true as const, body, env: e };
+    last = { status: res.status, body, env: e };
+    const msg = String(body?.message || "").toLowerCase();
+    if (!(res.status === 401 || res.status === 403 || msg.includes("authentication"))) break;
+  }
+  return { ok: false as const, ...last! };
+}
+
+
 /** Creates a Cashfree order and returns the payment session used by the checkout SDK. */
 export const createCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
