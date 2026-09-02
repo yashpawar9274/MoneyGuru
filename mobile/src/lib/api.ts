@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 
 export const API_BASE: string =
-  (Constants.expoConfig?.extra as any)?.apiBaseUrl ?? "https://mmoneyguru.lovable.app";
+  (Constants.expoConfig?.extra as any)?.apiBaseUrl ?? "https://moneyguruai.dev";
 
 export async function scanBill(imageBase64: string) {
   const r = await fetch(`${API_BASE}/api/scan-bill`, {

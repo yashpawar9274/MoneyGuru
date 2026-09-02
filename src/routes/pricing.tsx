@@ -40,6 +40,15 @@ declare global {
   }
 }
 
+/** Domain whitelisted in the Cashfree dashboard — checkout must run from here. */
+const LIVE_ORIGIN = "https://moneyguruai.dev";
+
+/** True when the current origin is allowed to launch Cashfree checkout. */
+function isCheckoutOrigin() {
+  const h = window.location.hostname;
+  return h === "moneyguruai.dev" || h === "www.moneyguruai.dev" || h === "localhost";
+}
+
 function loadSdk(): Promise<NonNullable<Window["Cashfree"]>> {
   return new Promise((resolve, reject) => {
     if (window.Cashfree) return resolve(window.Cashfree);
@@ -110,11 +119,18 @@ function Pricing() {
       toast.error("Sign in first to subscribe");
       return;
     }
+    // Cashfree only allows checkout from whitelisted domains. Preview/dev origins
+    // are not whitelisted, so send the user to the live domain to pay.
+    if (!isCheckoutOrigin()) {
+      toast.info("Opening secure checkout on moneyguruai.dev…");
+      window.location.href = `${LIVE_ORIGIN}/pricing?plan=${plan}`;
+      return;
+    }
     setBusy(plan);
     try {
       const [sdk, order] = await Promise.all([
         loadSdk(),
-        start({ data: { plan, returnUrl: `${window.location.origin}/pricing` } }),
+        start({ data: { plan, returnUrl: `${LIVE_ORIGIN}/pricing` } }),
       ]);
       const cf = sdk({ mode: order.mode === "production" ? "production" : "sandbox" });
       await cf.checkout({ paymentSessionId: order.paymentSessionId, redirectTarget: "_self" });

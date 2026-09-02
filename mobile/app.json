@@ -20,7 +20,7 @@
     "web": { "bundler": "metro" },
     "plugins": ["expo-router", "expo-image-picker", "expo-localization"],
     "extra": {
-      "apiBaseUrl": "https://mmoneyguru.lovable.app"
+      "apiBaseUrl": "https://moneyguruai.dev"
     }
   }
 }
