@@ -259,7 +259,7 @@ function SettingsPage() {
 }
 
 function AccountCard() {
-  const { user, profile, subscription, isPro, signOut, activatePro, updateProfile } = useAuth();
+  const { user, profile, subscription, isPro, signOut, updateProfile } = useAuth();
   const [name, setName] = useState(profile?.full_name ?? "");
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -281,16 +281,9 @@ function AccountCard() {
     }
   };
 
-  const upgrade = async () => {
+  const upgrade = () => {
     setBusy(true);
-    try {
-      await activatePro();
-      toast.success("Pro activated — ₹100/month");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upgrade failed");
-    } finally {
-      setBusy(false);
-    }
+    window.location.href = "/pricing";
   };
 
   return (
@@ -335,7 +328,7 @@ function AccountCard() {
           className="mt-3 w-full rounded-xl bg-neon py-3 text-sm font-bold text-neon-foreground active:scale-[0.98] transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {busy && <Loader2 className="size-4 animate-spin" />}
-          Upgrade to Pro — ₹100/month
+          View plans — Pro ₹100/month
         </button>
       )}
 

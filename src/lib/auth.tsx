@@ -41,7 +41,6 @@ interface AuthCtx {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (patch: Partial<Profile>) => Promise<void>;
-  activatePro: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -160,12 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (uid) await load(uid);
   }, [session?.user.id, load]);
 
-  const activatePro = useCallback(async () => {
-    const { error } = await supabase.rpc("activate_pro");
-    if (error) throw error;
-    await refresh();
-  }, [refresh]);
-
   const plan = subscription?.plan ?? "free";
   const expired =
     plan === "pro" &&
@@ -186,7 +179,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       signOut,
       updateProfile,
-      activatePro,
       refresh,
     }),
     [
@@ -200,7 +192,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       signOut,
       updateProfile,
-      activatePro,
       refresh,
     ],
   );

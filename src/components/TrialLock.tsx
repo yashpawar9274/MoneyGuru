@@ -39,7 +39,7 @@ async function speak(text: string, lang: string) {
 
 /** 24h free-trial countdown pill + hard paywall lock with live AI voice announcement. */
 export function TrialLock() {
-  const { isPro, subscription, profile, activatePro } = useAuth();
+  const { isPro, subscription, profile } = useAuth();
   const { lang } = useI18n();
   const getLine = useServerFn(getTrialVoiceLine);
   const [now, setNow] = useState(() => Date.now());
@@ -98,16 +98,9 @@ export function TrialLock() {
     })();
   }, [locked, left, getLine, profile?.full_name, spokenLang]);
 
-  const upgrade = async () => {
+  const upgrade = () => {
     setBusy(true);
-    try {
-      await activatePro();
-      toast.success("Pro activated — ₹100/month");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upgrade failed");
-    } finally {
-      setBusy(false);
-    }
+    window.location.href = "/pricing";
   };
 
   if (isPro || left === null) return null;
@@ -148,7 +141,7 @@ export function TrialLock() {
           className="mt-5 w-full rounded-xl bg-neon py-3.5 text-sm font-bold text-neon-foreground active:scale-[0.98] transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {busy && <Loader2 className="size-4 animate-spin" />}
-          Subscribe — ₹100 / month
+          See plans — ₹100 / month
         </button>
         <button
           onClick={() => line && void speak(line, spokenLang)}
