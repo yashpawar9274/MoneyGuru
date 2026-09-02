@@ -27,12 +27,12 @@ function cfHeaders(appId: string, secret: string) {
 }
 
 /**
- * Cashfree returns "authentication Failed" when the keys belong to the other
- * environment. Try the configured env first, then fall back to the other one.
+ * Calls the Cashfree PG API. In production we never fall back to sandbox, so a
+ * successful checkout always means a real payment was accepted.
  */
 async function cfFetch(path: string, init: RequestInit = {}) {
   const { appId, secret, env } = creds();
-  const order: string[] = env === "production" ? ["production", "sandbox"] : ["sandbox", "production"];
+  const order: string[] = env === "production" ? ["production"] : ["sandbox", "production"];
   let last: { status: number; body: any; env: string } | null = null;
   for (const e of order) {
     const res = await fetch(`${cashfreeBase(e)}${path}`, {
