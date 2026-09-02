@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "@/lib/store";
 import { AutoVoiceAgent } from "@/components/AutoVoiceAgent";
+import { TrialLock } from "@/components/TrialLock";
 
 import { DebtsProvider } from "@/lib/debts";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -129,6 +130,7 @@ function RootComponent() {
               <DebtsProvider>
                 <SplashScreen />
                 <AutoVoiceAgent />
+                <TrialLock />
 
                 <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
                   <Outlet />
