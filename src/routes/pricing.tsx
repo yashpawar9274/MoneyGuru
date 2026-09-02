@@ -113,6 +113,18 @@ function Pricing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // Arrived from a non-whitelisted origin with ?plan=… — resume that checkout here.
+  useEffect(() => {
+    if (!user || ready !== true) return;
+    const wanted = new URLSearchParams(window.location.search).get("plan");
+    if (wanted !== "pro" && wanted !== "lifetime") return;
+    if (!isCheckoutOrigin(mode)) return;
+    window.history.replaceState({}, "", "/pricing");
+    void pay(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, ready, mode]);
+
+
   const pay = async (plan: PaidPlan) => {
     if (!user) {
       toast.error("Sign in first to subscribe");
