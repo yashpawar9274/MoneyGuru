@@ -82,10 +82,10 @@ const text = {
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
+  backgroundColor: '#BFF747',
+  color: '#15151a',
   fontSize: '14px',
-  border: '1px solid #000000',
+  border: '1px solid #BFF747',
   borderRadius: '8px',
   padding: '12px 20px',
   textDecoration: 'none',
@@ -94,8 +94,8 @@ const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
   @media (prefers-color-scheme: dark) {
-    .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+    .dm-btn { background-color: #BFF747 !important; color: #15151a !important; }
   }
-  [data-ogsc] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
-  [data-ogsb] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+  [data-ogsc] .dm-btn { background-color: #BFF747 !important; color: #15151a !important; }
+  [data-ogsb] .dm-btn { background-color: #BFF747 !important; color: #15151a !important; }
 `
