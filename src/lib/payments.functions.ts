@@ -146,8 +146,26 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     return { status: "pending" as const };
   });
 
-/** Tells the UI whether Cashfree keys are present, without exposing them. */
-export const paymentsStatus = createServerFn({ method: "GET" }).handler(async () => ({
-  ready: Boolean(process.env["CASHFREE_APP_ID"] && process.env["CASHFREE_SECRET_KEY"]),
-  mode: (process.env["CASHFREE_ENV"] || "sandbox").trim().toLowerCase(),
-}));
+/**
+ * Tells the UI whether Cashfree keys are present and actually accepted by the
+ * configured environment, without exposing the keys themselves.
+ */
+export const paymentsStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const appId = process.env["CASHFREE_APP_ID"];
+  const secret = process.env["CASHFREE_SECRET_KEY"];
+  const mode = (process.env["CASHFREE_ENV"] || "sandbox").trim().toLowerCase();
+  if (!appId || !secret) return { ready: false, mode, keysValid: false, error: "Cashfree keys missing" };
+
+  // A probe order-id that cannot exist: 404 proves the credentials authenticated.
+  try {
+    const res = await fetch(`${cashfreeBase(mode)}/pg/orders/mfy_probe_0000000000`, {
+      headers: cfHeaders(appId.trim(), secret.trim()),
+    });
+    if (res.status === 401 || res.status === 403) {
+      return { ready: true, mode, keysValid: false, error: `Keys rejected by Cashfree ${mode}` };
+    }
+    return { ready: true, mode, keysValid: true, error: "" };
+  } catch {
+    return { ready: true, mode, keysValid: true, error: "" };
+  }
+});
