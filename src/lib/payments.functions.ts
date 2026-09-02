@@ -119,7 +119,6 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { appId, secret, env } = creds();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: row } = await supabaseAdmin
@@ -130,11 +129,10 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     if (!row || row.user_id !== context.userId) return { status: "unknown" as const };
     if (row.status === "paid") return { status: "paid" as const, plan: row.plan as PaidPlan };
 
-    const res = await fetch(`${cashfreeBase(env)}/pg/orders/${encodeURIComponent(data.orderId)}`, {
-      headers: cfHeaders(appId, secret),
-    });
-    const order = (await res.json()) as { order_status?: string };
+    const res = await cfFetch(`/pg/orders/${encodeURIComponent(data.orderId)}`);
+    const order = (res.body || {}) as { order_status?: string };
     if (!res.ok) return { status: "pending" as const };
+
 
     if (order.order_status === "PAID") {
       const { error } = await supabaseAdmin.rpc("apply_paid_order", { p_order_id: data.orderId });
