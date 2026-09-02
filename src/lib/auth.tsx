@@ -26,6 +26,7 @@ export interface Subscription {
   status: string;
   price_inr: number;
   current_period_end: string | null;
+  trial_ends_at: string | null;
 }
 
 interface AuthCtx {
