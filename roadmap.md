@@ -1,4 +1,4 @@
 # Roadmap
 
-- [ ] Payments: recommend Paddle, confirm with user, then enable
-- [ ] Auth email templates setup
+- [ ] Payments: Paddle recommended — waiting for user confirmation to enable
+- [x] Auth email templates setup (scaffolded, branded neon lime, wired into vite config)
