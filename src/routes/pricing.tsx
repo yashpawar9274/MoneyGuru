@@ -6,6 +6,7 @@ import { ArrowLeft, Check, Crown, Loader2, ShieldCheck, Sparkles, Zap } from "lu
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { createCheckout, confirmCheckout, paymentsStatus, type PaidPlan } from "@/lib/payments.functions";
+import { CHECKOUT_ORIGIN, isCheckoutOrigin } from "@/lib/payment-origin";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -119,7 +120,7 @@ function Pricing() {
     }
     // Cashfree only allows checkout from whitelisted domains. Preview/dev origins
     // are not whitelisted, so send the user to the live domain to pay.
-    if (!isCheckoutOrigin()) {
+    if (!isCheckoutOrigin(mode)) {
       toast.info("Opening secure checkout on moneyguruai.dev…");
       window.location.href = `${LIVE_ORIGIN}/pricing?plan=${plan}`;
       return;
