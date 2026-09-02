@@ -58,15 +58,13 @@ export const createCheckout = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { appId, secret, env } = creds();
     const amount = PLAN_PRICE_INR[data.plan];
     const orderId = `mfy_${data.plan}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const email = context.claims?.email as string | undefined;
     const phone = (data.phone || "").replace(/\D/g, "").slice(-10) || "9999999999";
 
-    const res = await fetch(`${cashfreeBase(env)}/pg/orders`, {
+    const res = await cfFetch("/pg/orders", {
       method: "POST",
-      headers: cfHeaders(appId, secret),
       body: JSON.stringify({
         order_id: orderId,
         order_amount: amount,
@@ -83,10 +81,16 @@ export const createCheckout = createServerFn({ method: "POST" })
       }),
     });
 
-    const body = (await res.json()) as { payment_session_id?: string; message?: string };
-    if (!res.ok || !body.payment_session_id) {
-      console.error("cashfree order failed", res.status, body?.message);
-      throw new Error(body?.message || "Could not start checkout. Please try again.");
+    const sessionId = res.ok ? (res.body as { payment_session_id?: string }).payment_session_id : undefined;
+    if (!res.ok || !sessionId) {
+      const msg = String((res.body as { message?: string })?.message || "");
+      console.error("cashfree order failed", res.ok ? 200 : res.status, msg);
+      if (/authentication/i.test(msg)) {
+        throw new Error(
+          "Cashfree rejected the API keys. Check that CASHFREE_APP_ID / CASHFREE_SECRET_KEY match CASHFREE_ENV (sandbox vs production).",
+        );
+      }
+      throw new Error(msg || "Could not start checkout. Please try again.");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -99,8 +103,13 @@ export const createCheckout = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
 
-    return { orderId, paymentSessionId: body.payment_session_id, mode: env === "production" ? "production" : "sandbox" as const };
+    return {
+      orderId,
+      paymentSessionId: sessionId,
+      mode: (res.env === "production" ? "production" : "sandbox") as "production" | "sandbox",
+    };
   });
+
 
 /** Verifies an order with Cashfree and activates the plan when it is paid. */
 export const confirmCheckout = createServerFn({ method: "POST" })
