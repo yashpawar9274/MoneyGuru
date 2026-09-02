@@ -230,6 +230,7 @@ export type Database = {
           plan: string
           price_inr: number
           status: string
+          trial_ends_at: string | null
           updated_at: string
           user_id: string
         }
@@ -239,6 +240,7 @@ export type Database = {
           plan?: string
           price_inr?: number
           status?: string
+          trial_ends_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -248,6 +250,7 @@ export type Database = {
           plan?: string
           price_inr?: number
           status?: string
+          trial_ends_at?: string | null
           updated_at?: string
           user_id?: string
         }
