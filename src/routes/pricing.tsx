@@ -60,6 +60,7 @@ function Pricing() {
   const [busy, setBusy] = useState<PaidPlan | null>(null);
   const [ready, setReady] = useState<boolean | null>(null);
   const [mode, setMode] = useState("sandbox");
+  const [keyError, setKeyError] = useState("");
   const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
@@ -67,6 +68,7 @@ function Pricing() {
       .then((r) => {
         setReady(r.ready);
         setMode(r.mode);
+        setKeyError(r.keysValid ? "" : r.error);
       })
       .catch(() => setReady(false));
   }, [status]);
