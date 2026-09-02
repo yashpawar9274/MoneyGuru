@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      setLoading(false);
       if (!s) {
         setProfile(null);
         setSubscription(null);
@@ -74,8 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+    // Never block the UI if session restore stalls (e.g. embedded previews).
+    const t = setTimeout(() => setLoading(false), 4000);
+    return () => {
+      clearTimeout(t);
+      sub.subscription.unsubscribe();
+    };
   }, []);
+
 
   useEffect(() => {
     const uid = session?.user.id;
