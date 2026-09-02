@@ -26,6 +26,7 @@ export interface Subscription {
   status: string;
   price_inr: number;
   current_period_end: string | null;
+  trial_ends_at: string | null;
 }
 
 interface AuthCtx {
@@ -89,6 +90,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!uid) return;
     void load(uid);
   }, [session?.user.id, load]);
+
+  // Realtime (websocket) plan/trial sync so lock + unlock happen instantly on every device.
+  useEffect(() => {
+    const uid = session?.user.id;
+    if (!uid) return;
+    const channel = supabase
+      .channel(`sub-${uid}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${uid}` },
+        (payload) => {
+          const row = payload.new as Subscription | null;
+          if (row) setSubscription(row);
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [session?.user.id]);
+
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
