@@ -41,6 +41,9 @@ Manifest: [`public/manifest.webmanifest`](public/manifest.webmanifest) · Icon: 
 <p align="center">
   <img src="./public/money1.png" alt="MoneyFYI App" width="350" />
 </p>
+<p align="center">
+  <img src="./public/icon-512.png" alt="MoneyFYI App" width="350" />
+</p>
 > No service worker is registered — this keeps the Lovable preview iframe stable. The app is installable and offline-ready via browser HTTP cache; for full offline support add a service worker after publishing.
 
 ### Environment variables
