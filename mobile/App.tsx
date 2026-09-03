@@ -49,7 +49,7 @@ function Shell() {
           </Pressable>
         ))}
       </View>
-      <TrialLock onUpgrade={() => setTab("pro")} />
+      {tab !== "pro" && tab !== "settings" && <TrialLock onUpgrade={() => setTab("pro")} />
     </SafeAreaView>
   );
 }
