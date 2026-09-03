@@ -38,7 +38,9 @@ bun run build        # production build
 Open the live site (or your deployed URL) on a mobile browser → **Add to Home Screen**. The app launches in standalone mode (no browser chrome) with the MONEY.FYI icon.
 
 Manifest: [`public/manifest.webmanifest`](public/manifest.webmanifest) · Icon: [`public/icon-512.png`](public/icon-512.png).
-
+<p align="center">
+  <img src="./public/money1.png" alt="MoneyFYI App" width="350" />
+</p>
 > No service worker is registered — this keeps the Lovable preview iframe stable. The app is installable and offline-ready via browser HTTP cache; for full offline support add a service worker after publishing.
 
 ### Environment variables
