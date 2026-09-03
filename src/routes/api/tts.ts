@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/tts")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { text, voiceId, probe, userKey } = (await request.json()) as { text?: string; voiceId?: string; probe?: boolean; userKey?: string };
+          const { text, voiceId, probe, userKey } = (await request.json()) as { text?: string; voiceId?: string; probe?: boolean; userKey?: string; lang?: string };
           const apiKey = (userKey && userKey.trim()) || process.env.ELEVENLABS_API_KEY;
           if (probe) {
             return apiKey
@@ -26,11 +26,18 @@ export const Route = createFileRoute("/api/tts")({
               headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
               body: JSON.stringify({
                 text,
-                model_id: "eleven_turbo_v2_5",
-                voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+                // Multilingual model pronounces Hinglish / Hindi / Spanish / French far better.
+                model_id: "eleven_multilingual_v2",
+                voice_settings: {
+                  stability: 0.4,
+                  similarity_boost: 0.85,
+                  style: 0.25,
+                  use_speaker_boost: true,
+                },
               }),
             },
           );
+
           if (!r.ok) {
             const err = await r.text();
             return new Response(err || "TTS failed", { status: r.status });
