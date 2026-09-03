@@ -49,7 +49,7 @@ Manifest: [`public/manifest.webmanifest`](public/manifest.webmanifest) · Icon: 
 | `ELEVENLABS_API_KEY`  | optional | Premium AI coach voice |
 
 Both are managed automatically inside Lovable. For local dev, put them in `.env`.
-
+public/money1.png
 ---
 
 ## 📱 Mobile App (Expo React Native)
