@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { getTrialVoiceLine } from "@/lib/trial-voice.functions";
-import { getVoiceId, getElevenKey, getVoiceLang, bcp47 } from "@/lib/voices";
+import { useRouterState } from "@tanstack/react-router";
+import { getVoiceLang } from "@/lib/voices";
+import { speakLine } from "@/lib/speech";
 
 function fmt(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -15,31 +17,10 @@ function fmt(ms: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
-async function speak(text: string, lang: string) {
-  try {
-    const r = await fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voiceId: getVoiceId(), userKey: getElevenKey() }),
-    });
-    if (!r.ok) throw new Error("tts");
-    const audio = new Audio(URL.createObjectURL(await r.blob()));
-    await audio.play();
-  } catch {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = bcp47(lang as "en" | "hi" | "es" | "fr");
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    } catch {
-      /* voice unavailable */
-    }
-  }
-}
-
 /** 24h free-trial countdown pill + hard paywall lock with live AI voice announcement. */
 export function TrialLock() {
   const { isPro, subscription, profile } = useAuth();
+  const pathname = useRouterState({ select: (st) => st.location.pathname });
   const { lang } = useI18n();
   const getLine = useServerFn(getTrialVoiceLine);
   const [now, setNow] = useState(() => Date.now());
@@ -67,11 +48,11 @@ export function TrialLock() {
       try {
         const { line: l } = await getLine({ data: { name, lang: spokenLang, kind: "expired", minutesLeft: 0 } });
         setLine(l);
-        await speak(l, spokenLang);
+        await speakLine(l, spokenLang);
       } catch {
         const fb = `${name || "Sir ya Madam"}, aapka free trial khatam ho gaya hai. ₹100 ka 1 month subscription le lijiye.`;
         setLine(fb);
-        await speak(fb, spokenLang);
+        await speakLine(fb, spokenLang);
       }
     })();
   }, [locked, getLine, profile?.full_name, spokenLang]);
@@ -91,7 +72,7 @@ export function TrialLock() {
           },
         });
         toast(l, { icon: "⏳" });
-        await speak(l, spokenLang);
+        await speakLine(l, spokenLang);
       } catch {
         /* ignore */
       }
@@ -104,6 +85,10 @@ export function TrialLock() {
   };
 
   if (isPro || left === null) return null;
+
+  // Never cover the checkout/settings screens — the user must be able to buy a plan.
+  const payScreen = pathname.startsWith("/pricing") || pathname.startsWith("/settings");
+  if (locked && payScreen) return null;
 
   if (!locked) {
     return (
@@ -144,7 +129,7 @@ export function TrialLock() {
           See plans — ₹100 / month
         </button>
         <button
-          onClick={() => line && void speak(line, spokenLang)}
+          onClick={() => line && void speakLine(line, spokenLang)}
           className="mt-2 w-full rounded-xl border border-border py-2.5 text-sm font-semibold text-foreground/70"
         >
           Replay voice message
