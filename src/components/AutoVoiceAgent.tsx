@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getTxVoiceLine } from "@/lib/tx-voice.functions";
-import { getVoiceId, getElevenKey, getAutoSpeak, getVoiceLang, bcp47 } from "@/lib/voices";
+import { getAutoSpeak, getVoiceLang } from "@/lib/voices";
+import { speakLine } from "@/lib/speech";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -19,29 +20,6 @@ export function AutoVoiceAgent() {
   txRef.current = transactions;
 
   useEffect(() => {
-    const speak = async (text: string, spokenLang: "en" | "hi" | "es" | "fr") => {
-      try {
-        const r = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, voiceId: getVoiceId(), userKey: getElevenKey() }),
-        });
-        if (!r.ok) throw new Error("tts");
-        const audio = new Audio(URL.createObjectURL(await r.blob()));
-        await audio.play();
-      } catch {
-        try {
-          const u = new SpeechSynthesisUtterance(text);
-          u.lang = bcp47(spokenLang);
-          speechSynthesis.cancel();
-          speechSynthesis.speak(u);
-        } catch {
-          /* speech unavailable */
-        }
-      }
-    };
-
-
     const onAdded = async (e: Event) => {
       if (!getAutoSpeak() || busy.current) return;
       const tx = (e as CustomEvent<Transaction>).detail;
@@ -74,7 +52,7 @@ export function AutoVoiceAgent() {
           },
         });
         toast(line, { icon: "🔊" });
-        await speak(line, spokenLang);
+        await speakLine(line, spokenLang);
       } catch {
         /* stay silent on failure */
       } finally {
