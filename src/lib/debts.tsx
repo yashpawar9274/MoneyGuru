@@ -17,6 +17,16 @@ export interface DebtPayment {
   amount: number;
   date: string;
   note?: string;
+  proofPath?: string;
+}
+
+/** One "money given / taken" event inside a merged debt record. */
+export interface DebtEntry {
+  id: string;
+  amount: number;
+  date: string;
+  note?: string;
+  proofPath?: string;
 }
 
 export type PayFreq = "daily" | "weekly" | "monthly";
@@ -30,6 +40,7 @@ export interface Debt {
   dueDate?: string; // ISO due date
   createdAt: string;
   payments: DebtPayment[];
+  entries: DebtEntry[];
   planAmount?: number; // amount per installment of the payoff plan
   planFreq?: PayFreq; // how often you can pay
   interestRate?: number; // % per month on the outstanding amount
@@ -37,15 +48,31 @@ export interface Debt {
   contactPhone?: string; // for WhatsApp reminders
 }
 
-export type NewDebt = Omit<Debt, "id" | "createdAt" | "payments">;
+export type NewDebt = Omit<Debt, "id" | "createdAt" | "payments" | "entries">;
 
 interface Ctx {
   debts: Debt[];
   loading: boolean;
-  addDebt: (d: NewDebt) => Promise<void>;
+  addDebt: (d: NewDebt) => Promise<string>;
   updateDebt: (id: string, patch: Partial<NewDebt>) => Promise<void>;
   removeDebt: (id: string) => Promise<void>;
-  addPayment: (debtId: string, amount: number, note?: string) => Promise<void>;
+  addPayment: (
+    debtId: string,
+    amount: number,
+    note?: string,
+    proofPath?: string,
+    paidAt?: string,
+  ) => Promise<void>;
+  /** Extra amount given/taken for an existing person — merges into the same card. */
+  addEntry: (
+    debtId: string,
+    amount: number,
+    note?: string,
+    proofPath?: string,
+    givenAt?: string,
+  ) => Promise<void>;
+  findDebt: (kind: DebtKind, title: string) => Debt | undefined;
+  refresh: () => Promise<void>;
 }
 
 const DebtsCtx = createContext<Ctx | null>(null);
