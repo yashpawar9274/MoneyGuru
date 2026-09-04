@@ -38,6 +38,47 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          debt_id: string
+          given_at: string
+          id: string
+          note: string | null
+          proof_path: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          debt_id: string
+          given_at?: string
+          id?: string
+          note?: string | null
+          proof_path?: string | null
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          debt_id?: string
+          given_at?: string
+          id?: string
+          note?: string | null
+          proof_path?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_entries_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debt_payments: {
         Row: {
           amount: number
@@ -45,6 +86,7 @@ export type Database = {
           id: string
           note: string | null
           paid_at: string
+          proof_path: string | null
           user_id: string
         }
         Insert: {
@@ -53,6 +95,7 @@ export type Database = {
           id?: string
           note?: string | null
           paid_at?: string
+          proof_path?: string | null
           user_id?: string
         }
         Update: {
@@ -61,6 +104,7 @@ export type Database = {
           id?: string
           note?: string | null
           paid_at?: string
+          proof_path?: string | null
           user_id?: string
         }
         Relationships: [
