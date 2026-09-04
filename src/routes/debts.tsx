@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send, Pencil, Share2, Camera, ChevronDown, Zap, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
+import { ledger, proofText, proofUrl, uploadProof, parseNotification, type LedgerItem } from "@/lib/debt-proof";
 import { getDebtAdvice } from "@/lib/debt-advice.functions";
 import { chatDebtCoach } from "@/lib/debt-chat.functions";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/debts")({
