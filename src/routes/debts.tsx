@@ -12,6 +12,7 @@ import { chatDebtCoach } from "@/lib/debt-chat.functions";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
+import { UdhaariLedgerSheet, isPersonDebt, normalizeDebtPerson } from "@/components/UdhaariLedgerSheet";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
@@ -42,7 +43,7 @@ function fmtDuration(days: number) {
 }
 
 function DebtsPage() {
-  const { debts, addDebt, updateDebt, removeDebt, addPayment, addEntry, findDebt } = useDebts();
+  const { debts, addDebt, updateDebt, removeDebt, addPayment, findDebt } = useDebts();
   const [openAdd, setOpenAdd] = useState(false);
   const [payFor, setPayFor] = useState<Debt | null>(null);
   const [editFor, setEditFor] = useState<Debt | null>(null);
@@ -385,13 +386,21 @@ function DebtsPage() {
               ) : null}
 
 
-              <button
-                onClick={() => setPayFor(d)}
-                disabled={left === 0}
-                className="mt-3 w-full py-2.5 rounded-xl bg-secondary text-foreground text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40"
-              >
-                <Check className="size-3.5" /> {left === 0 ? "Cleared" : "Mark Payment"}
-              </button>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setOpenLedger(d.id)}
+                  className="py-2.5 rounded-xl bg-neon/10 text-neon text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                >
+                  <Share2 className="size-3.5" /> View Ledger
+                </button>
+                <button
+                  onClick={() => setPayFor(d)}
+                  disabled={left === 0}
+                  className="py-2.5 rounded-xl bg-secondary text-foreground text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40"
+                >
+                  <Check className="size-3.5" /> {left === 0 ? "Cleared" : "Mark Payment"}
+                </button>
+              </div>
             </motion.div>
           );
         })}
@@ -400,7 +409,17 @@ function DebtsPage() {
       <AddDebtSheet
         open={openAdd}
         onClose={() => setOpenAdd(false)}
-        onSave={(d) => { addDebt(d); toast.success("Added"); }}
+        onSave={(d) => {
+          const existing = isPersonDebt(d.kind)
+            ? debts.find((item) => isPersonDebt(item.kind) && normalizeDebtPerson(item.title) === normalizeDebtPerson(d.title))
+            : undefined;
+          if (existing) {
+            setOpenLedger(existing.id);
+            toast.success(`${existing.title} already has a ledger`);
+            return;
+          }
+          void addDebt(d).then((id) => { toast.success("Added"); setOpenLedger(id); }).catch((error) => toast.error(error instanceof Error ? error.message : "Could not add"));
+        }}
       />
       <PaymentSheet
         debt={payFor}
@@ -424,6 +443,10 @@ function DebtsPage() {
         lang={lang}
         debts={debts}
         transactions={transactions}
+      />
+      <UdhaariLedgerSheet
+        debt={debts.find((debt) => debt.id === openLedger) ?? null}
+        onClose={() => setOpenLedger(null)}
       />
     </div>
   );

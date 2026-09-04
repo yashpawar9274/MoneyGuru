@@ -71,6 +71,10 @@ interface Ctx {
     proofPath?: string,
     givenAt?: string,
   ) => Promise<void>;
+  updateEntry: (id: string, patch: { amount: number; note?: string; givenAt?: string }) => Promise<void>;
+  removeEntry: (id: string) => Promise<void>;
+  updatePayment: (id: string, patch: { amount: number; note?: string; paidAt?: string }) => Promise<void>;
+  removePayment: (id: string) => Promise<void>;
   findDebt: (kind: DebtKind, title: string) => Debt | undefined;
   refresh: () => Promise<void>;
 }
@@ -287,6 +291,53 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
     [debts, fetchAll],
   );
 
+  const updateEntry = useCallback(
+    async (id: string, patch: { amount: number; note?: string; givenAt?: string }) => {
+      const entry = debts.flatMap((d) => d.entries).find((item) => item.id === id);
+      if (!entry) throw new Error("Transaction not found");
+      const debt = debts.find((d) => d.entries.some((item) => item.id === id));
+      const { error } = await supabase.from("debt_entries").update({
+        amount: patch.amount,
+        note: patch.note ?? null,
+        ...(patch.givenAt ? { given_at: patch.givenAt } : {}),
+      } as never).eq("id", id);
+      if (error) throw error;
+      if (debt) {
+        const { error: debtError } = await supabase.from("debts").update({ principal: debt.principal + patch.amount - entry.amount } as never).eq("id", debt.id);
+        if (debtError) throw debtError;
+      }
+      await fetchAll();
+    },
+    [debts, fetchAll],
+  );
+
+  const removeEntry = useCallback(async (id: string) => {
+    const entry = debts.flatMap((d) => d.entries).find((item) => item.id === id);
+    const debt = debts.find((d) => d.entries.some((item) => item.id === id));
+    if (!entry || !debt) throw new Error("Transaction not found");
+    const { error } = await supabase.from("debt_entries").delete().eq("id", id);
+    if (error) throw error;
+    const { error: debtError } = await supabase.from("debts").update({ principal: Math.max(0, debt.principal - entry.amount) } as never).eq("id", debt.id);
+    if (debtError) throw debtError;
+    await fetchAll();
+  }, [debts, fetchAll]);
+
+  const updatePayment = useCallback(async (id: string, patch: { amount: number; note?: string; paidAt?: string }) => {
+    const { error } = await supabase.from("debt_payments").update({
+      amount: patch.amount,
+      note: patch.note ?? null,
+      ...(patch.paidAt ? { paid_at: patch.paidAt } : {}),
+    } as never).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  }, [fetchAll]);
+
+  const removePayment = useCallback(async (id: string) => {
+    const { error } = await supabase.from("debt_payments").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  }, [fetchAll]);
+
   const findDebt = useCallback(
     (kind: DebtKind, title: string) =>
       debts.find(
@@ -304,10 +355,14 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       removeDebt,
       addPayment,
       addEntry,
+      updateEntry,
+      removeEntry,
+      updatePayment,
+      removePayment,
       findDebt,
       refresh: fetchAll,
     }),
-    [debts, loading, addDebt, updateDebt, removeDebt, addPayment, addEntry, findDebt, fetchAll],
+    [debts, loading, addDebt, updateDebt, removeDebt, addPayment, addEntry, updateEntry, removeEntry, updatePayment, removePayment, findDebt, fetchAll],
   );
   return <DebtsCtx.Provider value={value}>{children}</DebtsCtx.Provider>;
 }
