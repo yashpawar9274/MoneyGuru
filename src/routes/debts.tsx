@@ -306,9 +306,15 @@ function DebtsPage() {
 
       <button
         onClick={() => setOpenAdd(true)}
-        className="w-full bg-neon text-neon-foreground font-bold py-3.5 rounded-2xl text-sm tracking-wide neon-glow active:scale-[0.98] transition-transform flex items-center justify-center gap-2 mb-5"
+        className="w-full bg-neon text-neon-foreground font-bold py-3.5 rounded-2xl text-sm tracking-wide neon-glow active:scale-[0.98] transition-transform flex items-center justify-center gap-2 mb-2"
       >
         <Plus className="size-4" strokeWidth={3} /> Add Udhari / EMI
+      </button>
+      <button
+        onClick={() => setSyncOpen(true)}
+        className="w-full mb-5 bg-card border border-warning/40 rounded-2xl py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 text-warning active:scale-[0.99] transition-transform"
+      >
+        <Zap className="size-3.5" /> Auto-Sync From Notification
       </button>
 
       {debts.length === 0 && (
