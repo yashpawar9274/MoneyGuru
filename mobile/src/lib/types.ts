@@ -1,7 +1,16 @@
 export type TxType = "income" | "expense";
 export type Category =
-  | "food" | "transport" | "shopping" | "entertainment" | "bills"
-  | "health" | "education" | "salary" | "freelance" | "investment" | "other";
+  | "food"
+  | "transport"
+  | "shopping"
+  | "entertainment"
+  | "bills"
+  | "health"
+  | "education"
+  | "salary"
+  | "freelance"
+  | "investment"
+  | "other";
 
 export interface Transaction {
   id: string;
@@ -11,6 +20,36 @@ export interface Transaction {
   note: string;
   date: string;
   source?: "manual" | "scan";
+}
+
+export type UdhaariTransactionType = "given" | "returned";
+
+export interface UdhaariPerson {
+  id: string;
+  name: string;
+  phone?: string;
+  normalizedName: string;
+  normalizedPhone?: string;
+  createdAt: string;
+}
+
+export interface UdhaariTransaction {
+  id: string;
+  personId: string;
+  type: UdhaariTransactionType;
+  amountPaise: number;
+  note: string;
+  createdAt: string;
+  transactionDate: string;
+}
+
+export function rupeesToPaise(value: string | number): number {
+  const amount = typeof value === "number" ? value : Number(value.replace(/,/g, "").trim());
+  return Number.isFinite(amount) ? Math.round(amount * 100) : 0;
+}
+
+export function formatRupees(paise: number): string {
+  return `₹${(paise / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export const CATEGORIES: { id: Category; label: string; emoji: string; kind: TxType }[] = [

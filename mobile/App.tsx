@@ -12,10 +12,12 @@ import AnalyticsScreen from "./src/screens/Analytics";
 import AIScreen from "./src/screens/AI";
 import SettingsScreen from "./src/screens/Settings";
 import PricingScreen from "./src/screens/Pricing";
+import UdhaariScreen from "./src/screens/Udhaari";
+import { UdhaariProvider } from "./src/lib/udhaari";
 
 const qc = new QueryClient();
-type Tab = "home" | "analytics" | "ai" | "pro" | "settings";
-const TABS: Tab[] = ["home", "analytics", "ai", "pro", "settings"];
+type Tab = "home" | "udhaari" | "analytics" | "ai" | "pro" | "settings";
+const TABS: Tab[] = ["home", "udhaari", "analytics", "ai", "pro", "settings"];
 
 function TrialPill({ onPress }: { onPress: () => void }) {
   const { ready, isPro, msLeft, locked } = useTrial();
@@ -37,6 +39,7 @@ function Shell() {
       <TrialPill onPress={() => setTab("pro")} />
       <View style={{ flex: 1 }}>
         {tab === "home" && <HomeScreen />}
+        {tab === "udhaari" && <UdhaariScreen />}
         {tab === "analytics" && <AnalyticsScreen />}
         {tab === "ai" && <AIScreen />}
         {tab === "pro" && <PricingScreen />}
@@ -59,10 +62,12 @@ export default function App() {
     <QueryClientProvider client={qc}>
       <TrialProvider>
         <StoreProvider>
-          <SafeAreaProvider>
-            <StatusBar style="light" />
-            <Shell />
-          </SafeAreaProvider>
+          <UdhaariProvider>
+            <SafeAreaProvider>
+              <StatusBar style="light" />
+              <Shell />
+            </SafeAreaProvider>
+          </UdhaariProvider>
         </StoreProvider>
       </TrialProvider>
     </QueryClientProvider>

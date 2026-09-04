@@ -15,7 +15,7 @@ export default function TrialLock({ onUpgrade }: { onUpgrade: () => void }) {
       "Sir ya Madam, aapka free trial khatam ho gaya hai. Sirf sau rupaye ka ek month subscription le lijiye.",
       { language: "hi-IN", rate: 0.95 },
     );
-    return () => Speech.stop();
+    return () => { void Speech.stop(); };
   }, [locked]);
 
   if (!locked) return null;
