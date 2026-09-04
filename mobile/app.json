@@ -12,15 +12,36 @@
       "resizeMode": "contain",
       "backgroundColor": "#09090b"
     },
-    "ios": { "supportsTablet": false, "bundleIdentifier": "app.moneyfyi" },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.moneyfyi"
+    },
     "android": {
       "package": "app.moneyfyi",
-      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#09090b" }
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#09090b"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
-    "web": { "bundler": "metro" },
-    "plugins": ["expo-router", "expo-image-picker", "expo-localization"],
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image-picker",
+      "expo-localization"
+    ],
     "extra": {
-      "apiBaseUrl": "https://moneyguruai.dev"
+      "apiBaseUrl": "https://moneyguruai.dev",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0c686432-e568-4eb6-9c29-faef9bf675db"
+      }
     }
   }
 }
