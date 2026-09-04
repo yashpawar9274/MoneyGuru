@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send, Pencil, Share2, Camera, ChevronDown, Zap, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { useDebts, remaining, paidTotal, forecast, daysUntil, type DebtKind, type Debt, type PayFreq } from "@/lib/debts";
+import { ledger, proofText, proofUrl, uploadProof, parseNotification, type LedgerItem } from "@/lib/debt-proof";
 import { getDebtAdvice } from "@/lib/debt-advice.functions";
 import { chatDebtCoach } from "@/lib/debt-chat.functions";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/debts")({
@@ -40,9 +42,13 @@ function fmtDuration(days: number) {
 }
 
 function DebtsPage() {
-  const { debts, addDebt, removeDebt, addPayment } = useDebts();
+  const { debts, addDebt, updateDebt, removeDebt, addPayment, addEntry, findDebt } = useDebts();
   const [openAdd, setOpenAdd] = useState(false);
   const [payFor, setPayFor] = useState<Debt | null>(null);
+  const [editFor, setEditFor] = useState<Debt | null>(null);
+  const [moreFor, setMoreFor] = useState<Debt | null>(null);
+  const [openLedger, setOpenLedger] = useState<string | null>(null);
+  const [syncOpen, setSyncOpen] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const { transactions } = useStore();
   const { lang } = useI18n();
@@ -51,6 +57,34 @@ function DebtsPage() {
   const [adviceLoading, setAdviceLoading] = useState(false);
   const [adviceOpen, setAdviceOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const share = async (d: Debt) => {
+    const text = proofText(d);
+    try {
+      const files: File[] = [];
+      const last = ledger(d).find((i) => i.proofPath);
+      if (last?.proofPath && typeof navigator !== "undefined" && "share" in navigator) {
+        try {
+          const url = await proofUrl(last.proofPath);
+          const blob = await (await fetch(url)).blob();
+          files.push(new File([blob], "payment-proof.jpg", { type: blob.type || "image/jpeg" }));
+        } catch {
+          /* proof optional */
+        }
+      }
+      if (typeof navigator !== "undefined" && navigator.share) {
+        const payload: ShareData = { title: `${d.title} — udhari statement`, text };
+        if (files.length && navigator.canShare?.({ files })) (payload as ShareData & { files: File[] }).files = files;
+        await navigator.share(payload);
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      toast.success("Statement copied — paste it in WhatsApp");
+    } catch {
+      /* user cancelled */
+    }
+  };
+
 
   const runAdvice = async () => {
     if (debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).length === 0) return toast.error("Add a debt first");
@@ -272,9 +306,15 @@ function DebtsPage() {
 
       <button
         onClick={() => setOpenAdd(true)}
-        className="w-full bg-neon text-neon-foreground font-bold py-3.5 rounded-2xl text-sm tracking-wide neon-glow active:scale-[0.98] transition-transform flex items-center justify-center gap-2 mb-5"
+        className="w-full bg-neon text-neon-foreground font-bold py-3.5 rounded-2xl text-sm tracking-wide neon-glow active:scale-[0.98] transition-transform flex items-center justify-center gap-2 mb-2"
       >
         <Plus className="size-4" strokeWidth={3} /> Add Udhari / EMI
+      </button>
+      <button
+        onClick={() => setSyncOpen(true)}
+        className="w-full mb-5 bg-card border border-warning/40 rounded-2xl py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 text-warning active:scale-[0.99] transition-transform"
+      >
+        <Zap className="size-3.5" /> Auto-Sync From Notification
       </button>
 
       {debts.length === 0 && (

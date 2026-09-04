@@ -17,6 +17,16 @@ export interface DebtPayment {
   amount: number;
   date: string;
   note?: string;
+  proofPath?: string;
+}
+
+/** One "money given / taken" event inside a merged debt record. */
+export interface DebtEntry {
+  id: string;
+  amount: number;
+  date: string;
+  note?: string;
+  proofPath?: string;
 }
 
 export type PayFreq = "daily" | "weekly" | "monthly";
@@ -30,6 +40,7 @@ export interface Debt {
   dueDate?: string; // ISO due date
   createdAt: string;
   payments: DebtPayment[];
+  entries: DebtEntry[];
   planAmount?: number; // amount per installment of the payoff plan
   planFreq?: PayFreq; // how often you can pay
   interestRate?: number; // % per month on the outstanding amount
@@ -37,15 +48,31 @@ export interface Debt {
   contactPhone?: string; // for WhatsApp reminders
 }
 
-export type NewDebt = Omit<Debt, "id" | "createdAt" | "payments">;
+export type NewDebt = Omit<Debt, "id" | "createdAt" | "payments" | "entries">;
 
 interface Ctx {
   debts: Debt[];
   loading: boolean;
-  addDebt: (d: NewDebt) => Promise<void>;
+  addDebt: (d: NewDebt) => Promise<string>;
   updateDebt: (id: string, patch: Partial<NewDebt>) => Promise<void>;
   removeDebt: (id: string) => Promise<void>;
-  addPayment: (debtId: string, amount: number, note?: string) => Promise<void>;
+  addPayment: (
+    debtId: string,
+    amount: number,
+    note?: string,
+    proofPath?: string,
+    paidAt?: string,
+  ) => Promise<void>;
+  /** Extra amount given/taken for an existing person — merges into the same card. */
+  addEntry: (
+    debtId: string,
+    amount: number,
+    note?: string,
+    proofPath?: string,
+    givenAt?: string,
+  ) => Promise<void>;
+  findDebt: (kind: DebtKind, title: string) => Debt | undefined;
+  refresh: () => Promise<void>;
 }
 
 const DebtsCtx = createContext<Ctx | null>(null);
@@ -71,6 +98,16 @@ interface PaymentRow {
   amount: number | string;
   note: string | null;
   paid_at: string;
+  proof_path?: string | null;
+}
+
+interface EntryRow {
+  id: string;
+  debt_id: string;
+  amount: number | string;
+  note: string | null;
+  given_at: string;
+  proof_path?: string | null;
 }
 
 const num = (v: number | string | null | undefined) =>
@@ -98,20 +135,39 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: rows }, { data: pays }] = await Promise.all([
+    const [{ data: rows }, { data: pays }, { data: ents }] = await Promise.all([
       supabase
         .from("debts")
         .select(
           "id,kind,title,principal,monthly,due_date,plan_amount,plan_freq,interest_rate,reason,contact_phone,created_at",
         )
         .order("created_at", { ascending: false }),
-      supabase.from("debt_payments").select("id,debt_id,amount,note,paid_at"),
+      supabase.from("debt_payments").select("id,debt_id,amount,note,paid_at,proof_path"),
+      supabase.from("debt_entries").select("id,debt_id,amount,note,given_at,proof_path"),
     ]);
     const byDebt = new Map<string, DebtPayment[]>();
     for (const p of (pays ?? []) as unknown as PaymentRow[]) {
       const list = byDebt.get(p.debt_id) ?? [];
-      list.push({ id: p.id, amount: Number(p.amount), date: p.paid_at, note: p.note ?? undefined });
+      list.push({
+        id: p.id,
+        amount: Number(p.amount),
+        date: p.paid_at,
+        note: p.note ?? undefined,
+        proofPath: p.proof_path ?? undefined,
+      });
       byDebt.set(p.debt_id, list);
+    }
+    const entriesByDebt = new Map<string, DebtEntry[]>();
+    for (const e of (ents ?? []) as unknown as EntryRow[]) {
+      const list = entriesByDebt.get(e.debt_id) ?? [];
+      list.push({
+        id: e.id,
+        amount: Number(e.amount),
+        date: e.given_at,
+        note: e.note ?? undefined,
+        proofPath: e.proof_path ?? undefined,
+      });
+      entriesByDebt.set(e.debt_id, list);
     }
     setDebts(
       ((rows ?? []) as unknown as DebtRow[]).map((r) => ({
@@ -128,6 +184,9 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         contactPhone: r.contact_phone ?? undefined,
         createdAt: r.created_at,
         payments: (byDebt.get(r.id) ?? []).sort((a, b) => +new Date(b.date) - +new Date(a.date)),
+        entries: (entriesByDebt.get(r.id) ?? []).sort(
+          (a, b) => +new Date(b.date) - +new Date(a.date),
+        ),
       })),
     );
     setLoading(false);
@@ -144,9 +203,19 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
 
   const addDebt = useCallback(
     async (d: NewDebt) => {
-      const { error } = await supabase.from("debts").insert(toDbPatch(d) as never);
+      const { data, error } = await supabase
+        .from("debts")
+        .insert(toDbPatch(d) as never)
+        .select("id")
+        .single();
       if (error) throw error;
+      const id = (data as unknown as { id: string }).id;
+      // First ledger entry so the timeline always shows when money moved.
+      await supabase
+        .from("debt_entries")
+        .insert({ debt_id: id, amount: d.principal, note: d.reason ?? null } as never);
       await fetchAll();
+      return id;
     },
     [fetchAll],
   );
@@ -169,39 +238,76 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addPayment = useCallback(
-    async (debtId: string, amount: number, note?: string) => {
-      const { data, error } = await supabase
-        .from("debt_payments")
-        .insert({ debt_id: debtId, amount, note: note ?? null })
-        .select("id,debt_id,amount,note,paid_at")
-        .single();
+    async (
+      debtId: string,
+      amount: number,
+      note?: string,
+      proofPath?: string,
+      paidAt?: string,
+    ) => {
+      const { error } = await supabase.from("debt_payments").insert({
+        debt_id: debtId,
+        amount,
+        note: note ?? null,
+        proof_path: proofPath ?? null,
+        ...(paidAt ? { paid_at: paidAt } : {}),
+      } as never);
       if (error) throw error;
-      const row = data as unknown as PaymentRow;
-      setDebts((p) =>
-        p.map((d) =>
-          d.id === debtId
-            ? {
-                ...d,
-                payments: [
-                  {
-                    id: row.id,
-                    amount: Number(row.amount),
-                    date: row.paid_at,
-                    note: row.note ?? undefined,
-                  },
-                  ...d.payments,
-                ],
-              }
-            : d,
-        ),
-      );
+      await fetchAll();
     },
-    [],
+    [fetchAll],
+  );
+
+  const addEntry = useCallback(
+    async (
+      debtId: string,
+      amount: number,
+      note?: string,
+      proofPath?: string,
+      givenAt?: string,
+    ) => {
+      const current = debts.find((d) => d.id === debtId);
+      const { error } = await supabase.from("debt_entries").insert({
+        debt_id: debtId,
+        amount,
+        note: note ?? null,
+        proof_path: proofPath ?? null,
+        ...(givenAt ? { given_at: givenAt } : {}),
+      } as never);
+      if (error) throw error;
+      if (current) {
+        const { error: e2 } = await supabase
+          .from("debts")
+          .update({ principal: current.principal + amount } as never)
+          .eq("id", debtId);
+        if (e2) throw e2;
+      }
+      await fetchAll();
+    },
+    [debts, fetchAll],
+  );
+
+  const findDebt = useCallback(
+    (kind: DebtKind, title: string) =>
+      debts.find(
+        (d) => d.kind === kind && d.title.trim().toLowerCase() === title.trim().toLowerCase(),
+      ),
+    [debts],
   );
 
   const value = useMemo(
-    () => ({ debts, loading, addDebt, updateDebt, removeDebt, addPayment }),
-    [debts, loading, addDebt, updateDebt, removeDebt, addPayment],
+    () => ({
+      debts,
+      loading,
+      addDebt,
+      updateDebt,
+      removeDebt,
+      addPayment,
+      addEntry,
+      findDebt,
+      refresh: fetchAll,
+    }),
+    [debts, loading, addDebt, updateDebt, removeDebt, addPayment, addEntry, findDebt, fetchAll],
   );
   return <DebtsCtx.Provider value={value}>{children}</DebtsCtx.Provider>;
 }
