@@ -42,9 +42,13 @@ function fmtDuration(days: number) {
 }
 
 function DebtsPage() {
-  const { debts, addDebt, removeDebt, addPayment } = useDebts();
+  const { debts, addDebt, updateDebt, removeDebt, addPayment, addEntry, findDebt } = useDebts();
   const [openAdd, setOpenAdd] = useState(false);
   const [payFor, setPayFor] = useState<Debt | null>(null);
+  const [editFor, setEditFor] = useState<Debt | null>(null);
+  const [moreFor, setMoreFor] = useState<Debt | null>(null);
+  const [openLedger, setOpenLedger] = useState<string | null>(null);
+  const [syncOpen, setSyncOpen] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const { transactions } = useStore();
   const { lang } = useI18n();
@@ -53,6 +57,34 @@ function DebtsPage() {
   const [adviceLoading, setAdviceLoading] = useState(false);
   const [adviceOpen, setAdviceOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const share = async (d: Debt) => {
+    const text = proofText(d);
+    try {
+      const files: File[] = [];
+      const last = ledger(d).find((i) => i.proofPath);
+      if (last?.proofPath && typeof navigator !== "undefined" && "share" in navigator) {
+        try {
+          const url = await proofUrl(last.proofPath);
+          const blob = await (await fetch(url)).blob();
+          files.push(new File([blob], "payment-proof.jpg", { type: blob.type || "image/jpeg" }));
+        } catch {
+          /* proof optional */
+        }
+      }
+      if (typeof navigator !== "undefined" && navigator.share) {
+        const payload: ShareData = { title: `${d.title} — udhari statement`, text };
+        if (files.length && navigator.canShare?.({ files })) (payload as ShareData & { files: File[] }).files = files;
+        await navigator.share(payload);
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      toast.success("Statement copied — paste it in WhatsApp");
+    } catch {
+      /* user cancelled */
+    }
+  };
+
 
   const runAdvice = async () => {
     if (debts.filter((d) => d.kind !== "udhari_given" && remaining(d) > 0).length === 0) return toast.error("Add a debt first");
