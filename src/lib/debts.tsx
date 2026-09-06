@@ -1,11 +1,11 @@
 import {
   createContext,
+  ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./auth";
@@ -335,9 +335,9 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
 
   const updateEntry = useCallback(
     async (id: string, patch: { amount: number; note?: string; givenAt?: string } & TxMeta) => {
-      const entry = debts.flatMap((d) => d.entries).find((item) => item.id === id);
+      const entry = debts.flatMap((d: Debt) => d.entries).find((item: DebtEntry) => item.id === id);
       if (!entry) throw new Error("Transaction not found");
-      const debt = debts.find((d) => d.entries.some((item) => item.id === id));
+      const debt = debts.find((d: Debt) => d.entries.some((item: DebtEntry) => item.id === id));
       const { error } = await supabase.from("debt_entries").update({
         amount: patch.amount,
         note: patch.note ?? null,
@@ -357,8 +357,8 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
   );
 
   const removeEntry = useCallback(async (id: string) => {
-    const entry = debts.flatMap((d) => d.entries).find((item) => item.id === id);
-    const debt = debts.find((d) => d.entries.some((item) => item.id === id));
+    const entry = debts.flatMap((d: Debt) => d.entries).find((item: DebtEntry) => item.id === id);
+    const debt = debts.find((d: Debt) => d.entries.some((item: DebtEntry) => item.id === id));
     if (!entry || !debt) throw new Error("Transaction not found");
     const { error } = await supabase.from("debt_entries").delete().eq("id", id);
     if (error) throw error;
@@ -443,7 +443,6 @@ export function paidTotal(d: Debt) {
   return d.payments.reduce((s, p) => s + p.amount, 0);
 }
 
-<<<<<<< HEAD
 /**
  * The principal is cached for cards and forecasts. The ledger entries are the
  * receipt source of truth, so keep this helper available for future displays.
@@ -454,8 +453,6 @@ export function ledgerGivenTotal(d: Debt) {
     : d.principal;
 }
 
-=======
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
 /** Months elapsed (fractional) since the debt was created. */
 export function monthsElapsed(d: Debt) {
   return Math.max(0, (Date.now() - +new Date(d.createdAt)) / (30 * 86400000));

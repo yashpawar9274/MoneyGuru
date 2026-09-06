@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-<<<<<<< HEAD
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -38,31 +37,6 @@ const AiRoute = AiRouteImport.update({
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
-=======
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as DebtsRouteImport } from './routes/debts'
-import { Route as LedgerRouteImport } from './routes/ledger'
-import { Route as ReceiptsRouteImport } from './routes/receipts'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as AiRouteImport } from './routes/ai'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiTtsRouteImport } from './routes/api/tts'
-import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
-import { Route as ApiPublicCashfreeWebhookRouteImport } from './routes/api/public/cashfree-webhook'
-import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   getParentRoute: () => rootRouteImport,
 } as any)
 const DebtsRoute = DebtsRouteImport.update({
@@ -75,20 +49,16 @@ const LedgerRoute = LedgerRouteImport.update({
   path: '/ledger',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-=======
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
 const ReceiptsRoute = ReceiptsRouteImport.update({
   id: '/receipts',
   path: '/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -97,21 +67,6 @@ const SettingsRoute = SettingsRouteImport.update({
 const ApiScanBillRoute = ApiScanBillRouteImport.update({
   id: '/api/scan-bill',
   path: '/api/scan-bill',
-=======
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiRoute = AiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
@@ -119,15 +74,9 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
 const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
   id: '/api/public/ai-advice',
   path: '/api/public/ai-advice',
-=======
-const ApiScanBillRoute = ApiScanBillRouteImport.update({
-  id: '/api/scan-bill',
-  path: '/api/scan-bill',
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicCashfreeWebhookRoute =
@@ -136,15 +85,9 @@ const ApiPublicCashfreeWebhookRoute =
     path: '/api/public/cashfree-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-<<<<<<< HEAD
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
-=======
-const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
-  id: '/api/public/ai-advice',
-  path: '/api/public/ai-advice',
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
@@ -152,14 +95,6 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
-=======
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -167,13 +102,8 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/debts': typeof DebtsRoute
   '/ledger': typeof LedgerRoute
-<<<<<<< HEAD
   '/pricing': typeof PricingRoute
   '/receipts': typeof ReceiptsRoute
-=======
-  '/receipts': typeof ReceiptsRoute
-  '/pricing': typeof PricingRoute
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
@@ -188,13 +118,8 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/debts': typeof DebtsRoute
   '/ledger': typeof LedgerRoute
-<<<<<<< HEAD
   '/pricing': typeof PricingRoute
   '/receipts': typeof ReceiptsRoute
-=======
-  '/receipts': typeof ReceiptsRoute
-  '/pricing': typeof PricingRoute
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
@@ -210,13 +135,8 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/debts': typeof DebtsRoute
   '/ledger': typeof LedgerRoute
-<<<<<<< HEAD
   '/pricing': typeof PricingRoute
   '/receipts': typeof ReceiptsRoute
-=======
-  '/receipts': typeof ReceiptsRoute
-  '/pricing': typeof PricingRoute
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
@@ -233,13 +153,8 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/debts'
     | '/ledger'
-<<<<<<< HEAD
     | '/pricing'
     | '/receipts'
-=======
-    | '/receipts'
-    | '/pricing'
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
@@ -254,13 +169,8 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/debts'
     | '/ledger'
-<<<<<<< HEAD
     | '/pricing'
     | '/receipts'
-=======
-    | '/receipts'
-    | '/pricing'
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
@@ -275,13 +185,8 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/debts'
     | '/ledger'
-<<<<<<< HEAD
     | '/pricing'
     | '/receipts'
-=======
-    | '/receipts'
-    | '/pricing'
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
     | '/settings'
     | '/api/scan-bill'
     | '/api/tts'
@@ -297,13 +202,8 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   DebtsRoute: typeof DebtsRoute
   LedgerRoute: typeof LedgerRoute
-<<<<<<< HEAD
   PricingRoute: typeof PricingRoute
   ReceiptsRoute: typeof ReceiptsRoute
-=======
-  ReceiptsRoute: typeof ReceiptsRoute
-  PricingRoute: typeof PricingRoute
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   SettingsRoute: typeof SettingsRoute
   ApiScanBillRoute: typeof ApiScanBillRoute
   ApiTtsRoute: typeof ApiTtsRoute
@@ -315,7 +215,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-<<<<<<< HEAD
     '/': {
       id: '/'
       path: '/'
@@ -335,20 +234,6 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/analytics'
       preLoaderRoute: typeof AnalyticsRouteImport
-=======
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
       parentRoute: typeof rootRouteImport
     }
     '/debts': {
@@ -365,7 +250,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LedgerRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -373,8 +257,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-=======
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
     '/receipts': {
       id: '/receipts'
       path: '/receipts'
@@ -382,7 +264,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -395,27 +276,6 @@ declare module '@tanstack/react-router' {
       path: '/api/scan-bill'
       fullPath: '/api/scan-bill'
       preLoaderRoute: typeof ApiScanBillRouteImport
-=======
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai': {
-      id: '/ai'
-      path: '/ai'
-      fullPath: '/ai'
-      preLoaderRoute: typeof AiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
       parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
@@ -425,19 +285,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
     '/api/public/ai-advice': {
       id: '/api/public/ai-advice'
       path: '/api/public/ai-advice'
       fullPath: '/api/public/ai-advice'
       preLoaderRoute: typeof ApiPublicAiAdviceRouteImport
-=======
-    '/api/scan-bill': {
-      id: '/api/scan-bill'
-      path: '/api/scan-bill'
-      fullPath: '/api/scan-bill'
-      preLoaderRoute: typeof ApiScanBillRouteImport
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cashfree-webhook': {
@@ -447,19 +299,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCashfreeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
       fullPath: '/lovable/email/auth/preview'
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-=======
-    '/api/public/ai-advice': {
-      id: '/api/public/ai-advice'
-      path: '/api/public/ai-advice'
-      fullPath: '/api/public/ai-advice'
-      preLoaderRoute: typeof ApiPublicAiAdviceRouteImport
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/webhook': {
@@ -469,16 +313,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
-=======
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   }
 }
 
@@ -488,13 +322,8 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   DebtsRoute: DebtsRoute,
   LedgerRoute: LedgerRoute,
-<<<<<<< HEAD
   PricingRoute: PricingRoute,
   ReceiptsRoute: ReceiptsRoute,
-=======
-  ReceiptsRoute: ReceiptsRoute,
-  PricingRoute: PricingRoute,
->>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   SettingsRoute: SettingsRoute,
   ApiScanBillRoute: ApiScanBillRoute,
   ApiTtsRoute: ApiTtsRoute,

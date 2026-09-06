@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -145,6 +146,7 @@ function RootComponent() {
           theme="dark" position="top-center"
           toastOptions={{ style: { background: "hsl(240 5% 12%)", color: "white", border: "1px solid hsl(240 5% 20%)" } }}
         />
+        <SpeedInsights />
       </I18nProvider>
     </QueryClientProvider>
   );
