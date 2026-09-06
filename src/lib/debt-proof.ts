@@ -34,6 +34,9 @@ export type LedgerItem = {
   date: string;
   note?: string;
   proofPath?: string;
+  purpose?: string;
+  method?: string;
+  location?: string;
 };
 
 /** Merged timeline: every amount given/taken + every payment, newest first. */
@@ -45,6 +48,9 @@ export function ledger(d: Debt): LedgerItem[] {
     date: e.date,
     note: e.note,
     proofPath: e.proofPath,
+    purpose: e.purpose,
+    method: e.method,
+    location: e.location,
   }));
   // Legacy debts created before the ledger existed: show the original amount.
   if (given.length === 0 && d.principal > 0) {
@@ -57,6 +63,9 @@ export function ledger(d: Debt): LedgerItem[] {
     date: p.date,
     note: p.note,
     proofPath: p.proofPath,
+    purpose: p.purpose,
+    method: p.method,
+    location: p.location,
   }));
   return [...given, ...paid].sort((a, b) => +new Date(b.date) - +new Date(a.date));
 }
