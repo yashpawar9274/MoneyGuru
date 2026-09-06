@@ -136,16 +136,85 @@ function EntryForm({ debt, item, onClose }: { debt: Debt; item?: LedgerItem; onC
   return <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm"><div className="w-full max-w-[440px] rounded-t-3xl border-t border-border bg-card p-6 pb-8"><div className="flex items-center justify-between"><h3 className="text-lg font-display font-bold">{item ? "Edit Transaction" : "Add Transaction"}</h3><button onClick={onClose} className="size-9 rounded-full bg-secondary grid place-items-center"><X className="size-4" /></button></div><p className="mt-1 text-xs text-foreground/50">{debt.title}</p><div className="mt-4 grid grid-cols-2 gap-2">{(["given", "paid"] as const).map((value) => <button key={value} disabled={!!item} onClick={() => setKind(value)} className={`rounded-xl border py-3 text-xs font-bold ${kind === value ? "border-neon bg-neon/10 text-neon" : "border-transparent bg-secondary"}`}>{value === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}</button>)}</div><label className="mt-4 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Amount<input autoFocus inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-lg font-bold outline-none" placeholder="0" /></label><label className="mt-3 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Note / reason<input value={note} onChange={(event) => setNote(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-sm outline-none" placeholder="Optional" /></label><div className="mt-3 grid grid-cols-2 gap-2"><label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-xs outline-none" /></label><label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Time<input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-xs outline-none" /></label></div><div className="mt-3"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Purpose</p><div className="mt-1.5 flex flex-wrap gap-1.5">{PURPOSES.map((value) => <button key={value} type="button" onClick={() => setPurpose(purpose === value ? "" : value)} className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${purpose === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"}`}>{value}</button>)}</div></div><div className="mt-3"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Payment method</p><div className="mt-1.5 grid grid-cols-3 gap-1.5">{METHODS.map((value) => <button key={value} type="button" onClick={() => setMethod(method === value ? "" : value)} className={`rounded-xl py-2 text-[11px] font-bold ${method === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"}`}>{value}</button>)}</div></div><label className="mt-3 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Location (optional)<input value={location} onChange={(event) => setLocation(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-sm outline-none" placeholder="Only if you want it on the receipt" /></label>{error && <p className="mt-3 text-xs text-danger">{error}</p>}<button onClick={() => void save()} className="mt-5 w-full rounded-2xl bg-neon py-3.5 text-sm font-bold text-neon-foreground">{item ? "Save Changes" : "Add Transaction"}</button></div></div>;
 }
 
+function ReceiptSheet({ debt, onClose, onEdit }: { debt: Debt; onClose: () => void; onEdit: () => void }) {
+  const [data, setData] = useState<ReceiptData | null>(null);
+  const [png, setPng] = useState<Blob | null>(null);
+  const [preview, setPreview] = useState("");
+  const [busy, setBusy] = useState(true);
+  useEffect(() => {
+    let url = "";
+    (async () => {
+      try {
+        const receipt = buildReceipt(debt);
+        const blob = await renderReceiptImage(receipt);
+        url = URL.createObjectURL(blob);
+        setData(receipt);
+        setPng(blob);
+        setPreview(url);
+      } catch (cause) {
+        toast.error(cause instanceof Error ? cause.message : "Could not build the receipt");
+        onClose();
+      } finally {
+        setBusy(false);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [debt, onClose]);
+  const share = async () => {
+    if (!data || !png) return;
+    try {
+      const mode = await shareReceipt(data, png);
+      if (mode === "whatsapp-text") toast.success("Receipt saved — attach it in the WhatsApp chat that just opened");
+    } catch { /* user cancelled the share sheet */ }
+  };
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/80 backdrop-blur-sm">
+      <div className="max-h-[92vh] w-full max-w-[440px] overflow-y-auto rounded-t-3xl border-t border-border bg-card p-5 pb-8">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neon">Receipt Preview</p>
+            <h3 className="mt-1 text-lg font-display font-bold">{debt.title}</h3>
+            {data && <p className="text-[11px] text-foreground/50">{data.number} · {data.generatedAt}</p>}
+          </div>
+          <button onClick={onClose} className="size-9 rounded-full bg-secondary grid place-items-center"><X className="size-4" /></button>
+        </div>
+        <div className="mt-4 min-h-40 overflow-hidden rounded-2xl border border-border bg-black/40">
+          {busy || !preview ? (
+            <div className="grid h-48 place-items-center"><Loader2 className="size-5 animate-spin text-neon" /></div>
+          ) : (
+            <img src={preview} alt={`MoneyFYI receipt for ${debt.title}`} className="w-full" />
+          )}
+        </div>
+        <p className="mt-3 text-[11px] text-foreground/50">Check every entry before sharing. Nothing is sent until you tap Share.</p>
+        <div className="mt-4 grid gap-2">
+          <button onClick={() => void share()} disabled={busy} className="w-full rounded-2xl bg-neon py-3.5 text-sm font-bold text-neon-foreground disabled:opacity-50">
+            <Share2 className="mr-1.5 inline size-4" /> Share on WhatsApp
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={onEdit} className="rounded-xl bg-secondary py-3 text-xs font-bold"><Pencil className="mr-1 inline size-3.5" /> Edit entries</button>
+            <button
+              disabled={busy}
+              onClick={() => { if (data && png) void downloadReceiptPdf(data, png).then(() => toast.success("PDF saved")).catch(() => toast.error("Could not save PDF")); }}
+              className="rounded-xl bg-secondary py-3 text-xs font-bold disabled:opacity-50"
+            ><Download className="mr-1 inline size-3.5" /> Save PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function UdhaariLedgerSheet({ debt, onClose }: { debt: Debt | null; onClose: () => void }) {
   const { removeEntry, removePayment } = useDebts();
   const [editing, setEditing] = useState<LedgerItem | undefined>();
   const [formOpen, setFormOpen] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const items = useMemo(() => debt ? ledger(debt) : [], [debt]);
-  useEffect(() => { setEditing(undefined); setFormOpen(false); }, [debt]);
+  useEffect(() => { setEditing(undefined); setFormOpen(false); setReceiptOpen(false); }, [debt]);
   if (!debt) return null;
   const pending = Math.max(0, debt.principal - debt.payments.reduce((sum, payment) => sum + payment.amount, 0));
   const remove = (item: LedgerItem) => { if (item.id.endsWith("-base")) return toast.error("Legacy entry cannot be deleted"); if (!confirm("Delete this transaction?")) return; void (item.kind === "given" ? removeEntry(item.id) : removePayment(item.id)).then(() => toast.success("Transaction deleted")).catch((error) => toast.error(error instanceof Error ? error.message : "Could not delete")); };
-  return <AnimatePresence>{<><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" /><motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="fixed bottom-0 left-1/2 z-50 max-h-[90vh] w-full max-w-[440px] -translate-x-1/2 overflow-y-auto rounded-t-3xl border-t border-border bg-card p-6 pb-8"><div className="flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-widest text-neon">Udhaari Ledger</p><h2 className="mt-1 text-2xl font-display font-bold">{debt.title}</h2><p className="text-xs text-foreground/50">{debt.contactPhone || ""}</p></div><button onClick={onClose} className="size-9 rounded-full bg-secondary grid place-items-center"><X className="size-4" /></button></div><div className="mt-5 rounded-2xl border border-neon/30 bg-neon/10 p-4"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">Total Pending</p><p className="mt-1 text-3xl font-display font-bold text-neon">{inr(pending)}</p><p className="mt-1 text-xs text-foreground/50">{items.length} transaction{items.length === 1 ? "" : "s"}</p></div><div className="mt-4 flex gap-2"><button onClick={() => { setEditing(undefined); setFormOpen(true); }} className="flex-1 rounded-xl bg-neon py-3 text-xs font-bold text-neon-foreground">+ ADD TRANSACTION</button><button onClick={() => void shareStatement(debt, items).catch(() => toast.error("Could not share statement"))} className="rounded-xl bg-secondary px-4 text-xs font-bold"><Share2 className="mr-1 inline size-3.5" /> Share</button></div><div className="mt-5 space-y-2">{items.map((item) => <div key={item.id} className="rounded-2xl border border-border bg-secondary/40 p-3"><div className="flex items-start gap-3"><div className={`mt-1 grid size-8 place-items-center rounded-lg ${item.kind === "given" ? "bg-danger/15 text-danger" : "bg-success/15 text-success"}`}>{item.kind === "given" ? "↑" : <Check className="size-4" />}</div><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{item.kind === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}</p><p className="text-[11px] text-foreground/50">{new Date(item.date).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>{item.note && <p className="mt-1 text-xs text-foreground/70">{item.note}</p>}</div><p className={`text-sm font-bold ${item.kind === "given" ? "text-danger" : "text-success"}`}>{item.kind === "given" ? "+" : "-"}{inr(item.amount)}</p></div>{!item.id.endsWith("-base") && <div className="mt-2 flex justify-end gap-3"><button onClick={() => { setEditing(item); setFormOpen(true); }} className="text-[10px] font-bold text-neon"><Pencil className="mr-1 inline size-3" /> Edit</button><button onClick={() => remove(item)} className="text-[10px] font-bold text-danger"><Trash2 className="mr-1 inline size-3" /> Delete</button></div>}</div>)}</div>{formOpen && <EntryForm debt={debt} item={editing} onClose={() => { setFormOpen(false); setEditing(undefined); }} />}</motion.div></>}</AnimatePresence>;
+  return <AnimatePresence>{<><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" /><motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="fixed bottom-0 left-1/2 z-50 max-h-[90vh] w-full max-w-[440px] -translate-x-1/2 overflow-y-auto rounded-t-3xl border-t border-border bg-card p-6 pb-8"><div className="flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-widest text-neon">Udhaari Ledger</p><h2 className="mt-1 text-2xl font-display font-bold">{debt.title}</h2><p className="text-xs text-foreground/50">{debt.contactPhone || ""}</p></div><button onClick={onClose} className="size-9 rounded-full bg-secondary grid place-items-center"><X className="size-4" /></button></div><div className="mt-5 rounded-2xl border border-neon/30 bg-neon/10 p-4"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">Total Pending</p><p className="mt-1 text-3xl font-display font-bold text-neon">{inr(pending)}</p><p className="mt-1 text-xs text-foreground/50">{items.length} transaction{items.length === 1 ? "" : "s"}</p></div><div className="mt-4 flex gap-2"><button onClick={() => { setEditing(undefined); setFormOpen(true); }} className="flex-1 rounded-xl bg-neon py-3 text-xs font-bold text-neon-foreground">+ ADD TRANSACTION</button><button onClick={() => void shareStatement(debt, items).catch(() => toast.error("Could not share statement"))} className="rounded-xl bg-secondary px-4 text-xs font-bold"><Share2 className="mr-1 inline size-3.5" /> Share</button></div><button onClick={() => setReceiptOpen(true)} className="mt-3 w-full rounded-2xl border border-neon/40 bg-neon/10 py-3.5 text-xs font-bold text-neon"><FileText className="mr-1.5 inline size-4" /> GENERATE RECEIPT & SHARE</button><div className="mt-5 space-y-2">{items.map((item) => <div key={item.id} className="rounded-2xl border border-border bg-secondary/40 p-3"><div className="flex items-start gap-3"><div className={`mt-1 grid size-8 place-items-center rounded-lg ${item.kind === "given" ? "bg-danger/15 text-danger" : "bg-success/15 text-success"}`}>{item.kind === "given" ? "↑" : <Check className="size-4" />}</div><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{item.kind === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}</p><p className="text-[11px] text-foreground/50">{new Date(item.date).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>{item.note && <p className="mt-1 text-xs text-foreground/70">{item.note}</p>}{(item.purpose || item.method || item.location) && <p className="mt-1 text-[11px] text-foreground/50">{[item.purpose, item.method, item.location].filter(Boolean).join(" · ")}</p>}</div><p className={`text-sm font-bold ${item.kind === "given" ? "text-danger" : "text-success"}`}>{item.kind === "given" ? "+" : "-"}{inr(item.amount)}</p></div>{!item.id.endsWith("-base") && <div className="mt-2 flex justify-end gap-3"><button onClick={() => { setEditing(item); setFormOpen(true); }} className="text-[10px] font-bold text-neon"><Pencil className="mr-1 inline size-3" /> Edit</button><button onClick={() => remove(item)} className="text-[10px] font-bold text-danger"><Trash2 className="mr-1 inline size-3" /> Delete</button></div>}</div>)}</div>{formOpen && <EntryForm debt={debt} item={editing} onClose={() => { setFormOpen(false); setEditing(undefined); }} />}{receiptOpen && <ReceiptSheet debt={debt} onClose={() => setReceiptOpen(false)} onEdit={() => { setReceiptOpen(false); setEditing(undefined); setFormOpen(true); }} />}</motion.div></>}</AnimatePresence>;
 }
 
 export function normalizeDebtPerson(value: string) {
