@@ -23,6 +23,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { SplashScreen } from "@/components/SplashScreen";
 import { BottomNav } from "@/components/BottomNav";
 import { AddTransactionSheet } from "@/components/AddTransactionSheet";
+import { CalculatorPopup } from "@/components/CalculatorPopup";
 import { Toaster } from "sonner";
 
 function NotFoundComponent() {
@@ -121,6 +122,7 @@ function AuthGate({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [addOpen, setAddOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -136,8 +138,9 @@ function RootComponent() {
                 <div className="min-h-screen mx-auto w-full max-w-[440px] pb-28 relative">
                   <Outlet />
                 </div>
-                <BottomNav onAdd={() => setAddOpen(true)} />
+                <BottomNav onAdd={() => setAddOpen(true)} onCalculator={() => setCalculatorOpen(true)} />
                 <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
+                <CalculatorPopup open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
               </DebtsProvider>
             </StoreProvider>
           </AuthGate>

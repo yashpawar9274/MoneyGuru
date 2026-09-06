@@ -1,14 +1,22 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, BarChart3, Brain, Settings, Plus } from "lucide-react";
+import { Home, BarChart3, Brain, Settings, Plus, Calculator } from "lucide-react";
 import { motion } from "framer-motion";
 
-export function BottomNav({ onAdd }: { onAdd: () => void }) {
+export function BottomNav({
+  onAdd,
+  onCalculator,
+}: {
+  onAdd: () => void;
+  onCalculator: () => void;
+}) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const item = (to: string, Icon: typeof Home) => {
     const active = path === to;
     return (
       <Link to={to} className="size-10 flex items-center justify-center">
-        <Icon className={`size-5 transition-colors ${active ? "text-neon" : "text-foreground/40"}`} />
+        <Icon
+          className={`size-5 transition-colors ${active ? "text-neon" : "text-foreground/40"}`}
+        />
       </Link>
     );
   };
@@ -27,6 +35,13 @@ export function BottomNav({ onAdd }: { onAdd: () => void }) {
         </motion.button>
         {item("/ai", Brain)}
         {item("/settings", Settings)}
+        <button
+          onClick={onCalculator}
+          className="size-10 flex items-center justify-center"
+          aria-label="Open calculator"
+        >
+          <Calculator className="size-5 text-foreground/40 transition-colors hover:text-neon" />
+        </button>
       </div>
     </nav>
   );
