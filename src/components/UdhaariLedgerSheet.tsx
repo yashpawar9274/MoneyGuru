@@ -138,11 +138,157 @@ function EntryForm({ debt, item, onClose }: { debt: Debt; item?: LedgerItem; onC
   const currentPending = Math.max(0, debt.principal - debt.payments.reduce((sum, payment) => sum + payment.amount, 0));
   const enteredAmount = Number(amount) || 0;
   const newPending = kind === "given" ? currentPending + enteredAmount : Math.max(0, currentPending - enteredAmount);
-  return <div className="fixed inset-0 z-[70] bg-card"><div className="mx-auto flex h-full w-full max-w-[720px] flex-col"><header className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-neon">Udhaari Ledger</p><h3 className="mt-1 text-lg font-display font-bold">{item ? "Edit Transaction" : "Add Transaction"}</h3><p className="mt-1 text-xs text-foreground/50">{debt.title} · Pending {inr(currentPending)}</p></div><button onClick={onClose} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-2 text-xs font-bold"><ArrowLeft className="size-4" /> Back</button></header><main className="flex-1 overflow-y-auto px-5 py-5 pb-32"><div className="grid grid-cols-2 gap-2">{(["given", "paid"] as const).map((value) => <button key={value} disabled={!!item} onClick={() => setKind(value)} className={`rounded-2xl border py-4 text-sm font-bold disabled:opacity-80 ${kind === value ? value === "given" ? "border-danger bg-danger/10 text-danger" : "border-success bg-success/10 text-success" : "border-transparent bg-secondary"}`}>{value === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}</button>)}</div><label className="mt-5 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Amount<input autoFocus inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))} className="mt-1.5 w-full rounded-2xl bg-secondary px-4 py-4 text-2xl font-bold outline-none" placeholder="₹ 0" /></label><div className="mt-4 rounded-2xl border border-neon/30 bg-neon/10 p-4"><div className="flex justify-between text-xs text-foreground/60"><span>Current pending</span><span>{inr(currentPending)}</span></div><div className="mt-2 flex justify-between text-sm font-bold"><span>New pending balance</span><span className="text-neon">{inr(newPending)}</span></div></div><label className="mt-5 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Note / reason<input value={note} onChange={(event) => setNote(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-sm outline-none" placeholder="Optional" /></label><div className="mt-4 grid grid-cols-2 gap-3"><label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-xs outline-none" /></label><label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Time<input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-xs outline-none" /></label></div><div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Purpose</p><div className="mt-2 flex flex-wrap gap-2">{PURPOSES.map((value) => <button key={value} type="button" onClick={() => setPurpose(purpose === value ? "" : value)} className={`rounded-full px-3 py-2 text-[11px] font-bold ${purpose === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"}`}>{value}</button>)}</div></div><div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Payment method</p><div className="mt-2 grid grid-cols-3 gap-2">{METHODS.map((value) => <button key={value} type="button" onClick={() => setMethod(method === value ? "" : value)} className={`rounded-xl py-3 text-[11px] font-bold ${method === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"}`}>{value}</button>)}</div></div><label className="mt-4 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Location (optional)<input value={location} onChange={(event) => setLocation(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-sm outline-none" placeholder="Only if you want it on the receipt" /></label>{error && <p className="mt-4 text-xs text-danger">{error}</p>}</main><footer className="shrink-0 border-t border-border bg-card p-4"><button onClick={() => void save()} className="w-full rounded-2xl bg-neon py-4 text-sm font-bold text-neon-foreground">{item ? "Save Changes" : "Add Transaction"}</button></footer></div></div>;
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm">
+      <div className="mx-auto flex h-full w-full max-w-[720px] flex-col bg-card">
+        <header className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neon">Udhaari Ledger</p>
+            <h3 className="mt-1 text-lg font-display font-bold">{item ? "Edit Transaction" : "Add Transaction"}</h3>
+            <p className="mt-1 text-xs text-foreground/50">{debt.title} · Pending {inr(currentPending)}</p>
+          </div>
+          <button onClick={onClose} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-2 text-xs font-bold">
+            <ArrowLeft className="size-4" /> Back
+          </button>
+        </header>
+
+        <main className="flex-1 overflow-y-auto px-5 py-5 pb-32">
+          <div className="grid grid-cols-2 gap-2">
+            {(["given", "paid"] as const).map((value) => (
+              <button
+                key={value}
+                disabled={!!item}
+                onClick={() => setKind(value)}
+                className={`rounded-2xl border py-4 text-sm font-bold disabled:opacity-80 ${
+                  kind === value
+                    ? value === "given"
+                      ? "border-danger bg-danger/10 text-danger"
+                      : "border-success bg-success/10 text-success"
+                    : "border-transparent bg-secondary"
+                }`}
+              >
+                {value === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}
+              </button>
+            ))}
+          </div>
+
+          <label className="mt-5 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+            Amount
+            <input
+              autoFocus
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))}
+              className="mt-1.5 w-full rounded-2xl bg-secondary px-4 py-4 text-2xl font-bold outline-none"
+              placeholder="₹ 0"
+            />
+          </label>
+
+          <div className="mt-4 rounded-2xl border border-neon/30 bg-neon/10 p-4">
+            <div className="flex justify-between text-xs text-foreground/60">
+              <span>Current pending</span>
+              <span>{inr(currentPending)}</span>
+            </div>
+            <div className="mt-2 flex justify-between text-sm font-bold">
+              <span>New pending balance</span>
+              <span className="text-neon">{inr(newPending)}</span>
+            </div>
+          </div>
+
+          <label className="mt-5 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+            Note / reason
+            <input
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-sm outline-none"
+              placeholder="Optional"
+            />
+          </label>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+              Date
+              <input
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+                className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-xs outline-none"
+              />
+            </label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+              Time
+              <input
+                type="time"
+                value={time}
+                onChange={(event) => setTime(event.target.value)}
+                className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-xs outline-none"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Purpose</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {PURPOSES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPurpose(purpose === value ? "" : value)}
+                  className={`rounded-full px-3 py-2 text-[11px] font-bold ${
+                    purpose === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Payment method</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {METHODS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setMethod(method === value ? "" : value)}
+                  className={`rounded-xl py-3 text-[11px] font-bold ${
+                    method === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="mt-4 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+            Location (optional)
+            <input
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-sm outline-none"
+              placeholder="Only if you want it on the receipt"
+            />
+          </label>
+
+          {error && <p className="mt-4 text-xs text-danger">{error}</p>}
+        </main>
+
+        <footer className="shrink-0 border-t border-border bg-card p-4">
+          <button onClick={() => void save()} className="w-full rounded-2xl bg-neon py-4 text-sm font-bold text-neon-foreground">
+            {item ? "Save Changes" : "Add Transaction"}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
 }
 
 export function ReceiptSheet({ debt, onClose, onEdit }: { debt: Debt; onClose: () => void; onEdit: () => void }) {
-  const { ensureReceipt } = useDebts();
+  const { ensureReceipt } = useDebts();
+
   const [data, setData] = useState<ReceiptData | null>(null);
   const [png, setPng] = useState<Blob | null>(null);
   const [preview, setPreview] = useState("");
