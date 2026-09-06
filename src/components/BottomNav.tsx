@@ -37,10 +37,11 @@ export function BottomNav({
         {item("/settings", Settings)}
         <button
           onClick={onCalculator}
-          className="size-10 flex items-center justify-center"
+          className="size-10 flex items-center justify-center rounded-xl border border-neon/40 bg-secondary text-neon shadow-[0_0_14px_hsl(var(--neon)/0.18)] transition-colors hover:bg-neon/10"
           aria-label="Open calculator"
+          title="Open calculator"
         >
-          <Calculator className="size-5 text-foreground/40 transition-colors hover:text-neon" />
+          <Calculator className="size-5" />
         </button>
       </div>
     </nav>
