@@ -45,8 +45,11 @@ export type Database = {
           debt_id: string
           given_at: string
           id: string
+          location: string | null
+          method: string | null
           note: string | null
           proof_path: string | null
+          purpose: string | null
           user_id: string
         }
         Insert: {
@@ -55,8 +58,11 @@ export type Database = {
           debt_id: string
           given_at?: string
           id?: string
+          location?: string | null
+          method?: string | null
           note?: string | null
           proof_path?: string | null
+          purpose?: string | null
           user_id?: string
         }
         Update: {
@@ -65,8 +71,11 @@ export type Database = {
           debt_id?: string
           given_at?: string
           id?: string
+          location?: string | null
+          method?: string | null
           note?: string | null
           proof_path?: string | null
+          purpose?: string | null
           user_id?: string
         }
         Relationships: [
@@ -84,27 +93,36 @@ export type Database = {
           amount: number
           debt_id: string
           id: string
+          location: string | null
+          method: string | null
           note: string | null
           paid_at: string
           proof_path: string | null
+          purpose: string | null
           user_id: string
         }
         Insert: {
           amount: number
           debt_id: string
           id?: string
+          location?: string | null
+          method?: string | null
           note?: string | null
           paid_at?: string
           proof_path?: string | null
+          purpose?: string | null
           user_id?: string
         }
         Update: {
           amount?: number
           debt_id?: string
           id?: string
+          location?: string | null
+          method?: string | null
           note?: string | null
           paid_at?: string
           proof_path?: string | null
+          purpose?: string | null
           user_id?: string
         }
         Relationships: [

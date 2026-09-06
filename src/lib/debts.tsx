@@ -12,7 +12,14 @@ import { useAuth } from "./auth";
 
 export type DebtKind = "udhari_given" | "udhari_taken" | "emi";
 
-export interface DebtPayment {
+/** Extra receipt-grade detail captured for a transaction. */
+export interface TxMeta {
+  purpose?: string;
+  method?: string;
+  location?: string;
+}
+
+export interface DebtPayment extends TxMeta {
   id: string;
   amount: number;
   date: string;
@@ -21,7 +28,7 @@ export interface DebtPayment {
 }
 
 /** One "money given / taken" event inside a merged debt record. */
-export interface DebtEntry {
+export interface DebtEntry extends TxMeta {
   id: string;
   amount: number;
   date: string;
@@ -62,6 +69,7 @@ interface Ctx {
     note?: string,
     proofPath?: string,
     paidAt?: string,
+    meta?: TxMeta,
   ) => Promise<void>;
   /** Extra amount given/taken for an existing person — merges into the same card. */
   addEntry: (
@@ -70,10 +78,17 @@ interface Ctx {
     note?: string,
     proofPath?: string,
     givenAt?: string,
+    meta?: TxMeta,
   ) => Promise<void>;
-  updateEntry: (id: string, patch: { amount: number; note?: string; givenAt?: string }) => Promise<void>;
+  updateEntry: (
+    id: string,
+    patch: { amount: number; note?: string; givenAt?: string } & TxMeta,
+  ) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
-  updatePayment: (id: string, patch: { amount: number; note?: string; paidAt?: string }) => Promise<void>;
+  updatePayment: (
+    id: string,
+    patch: { amount: number; note?: string; paidAt?: string } & TxMeta,
+  ) => Promise<void>;
   removePayment: (id: string) => Promise<void>;
   findDebt: (kind: DebtKind, title: string) => Debt | undefined;
   refresh: () => Promise<void>;
@@ -103,6 +118,9 @@ interface PaymentRow {
   note: string | null;
   paid_at: string;
   proof_path?: string | null;
+  purpose?: string | null;
+  method?: string | null;
+  location?: string | null;
 }
 
 interface EntryRow {
@@ -112,6 +130,9 @@ interface EntryRow {
   note: string | null;
   given_at: string;
   proof_path?: string | null;
+  purpose?: string | null;
+  method?: string | null;
+  location?: string | null;
 }
 
 const num = (v: number | string | null | undefined) =>
@@ -146,8 +167,8 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
           "id,kind,title,principal,monthly,due_date,plan_amount,plan_freq,interest_rate,reason,contact_phone,created_at",
         )
         .order("created_at", { ascending: false }),
-      supabase.from("debt_payments").select("id,debt_id,amount,note,paid_at,proof_path"),
-      supabase.from("debt_entries").select("id,debt_id,amount,note,given_at,proof_path"),
+      supabase.from("debt_payments").select("id,debt_id,amount,note,paid_at,proof_path,purpose,method,location"),
+      supabase.from("debt_entries").select("id,debt_id,amount,note,given_at,proof_path,purpose,method,location"),
     ]);
     const byDebt = new Map<string, DebtPayment[]>();
     for (const p of (pays ?? []) as unknown as PaymentRow[]) {
@@ -158,6 +179,9 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         date: p.paid_at,
         note: p.note ?? undefined,
         proofPath: p.proof_path ?? undefined,
+        purpose: p.purpose ?? undefined,
+        method: p.method ?? undefined,
+        location: p.location ?? undefined,
       });
       byDebt.set(p.debt_id, list);
     }
@@ -170,6 +194,9 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         date: e.given_at,
         note: e.note ?? undefined,
         proofPath: e.proof_path ?? undefined,
+        purpose: e.purpose ?? undefined,
+        method: e.method ?? undefined,
+        location: e.location ?? undefined,
       });
       entriesByDebt.set(e.debt_id, list);
     }
@@ -248,12 +275,16 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       note?: string,
       proofPath?: string,
       paidAt?: string,
+      meta?: TxMeta,
     ) => {
       const { error } = await supabase.from("debt_payments").insert({
         debt_id: debtId,
         amount,
         note: note ?? null,
         proof_path: proofPath ?? null,
+        purpose: meta?.purpose ?? null,
+        method: meta?.method ?? null,
+        location: meta?.location ?? null,
         ...(paidAt ? { paid_at: paidAt } : {}),
       } as never);
       if (error) throw error;
@@ -269,6 +300,7 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       note?: string,
       proofPath?: string,
       givenAt?: string,
+      meta?: TxMeta,
     ) => {
       const current = debts.find((d) => d.id === debtId);
       const { error } = await supabase.from("debt_entries").insert({
@@ -276,6 +308,9 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         amount,
         note: note ?? null,
         proof_path: proofPath ?? null,
+        purpose: meta?.purpose ?? null,
+        method: meta?.method ?? null,
+        location: meta?.location ?? null,
         ...(givenAt ? { given_at: givenAt } : {}),
       } as never);
       if (error) throw error;
@@ -292,13 +327,16 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
   );
 
   const updateEntry = useCallback(
-    async (id: string, patch: { amount: number; note?: string; givenAt?: string }) => {
+    async (id: string, patch: { amount: number; note?: string; givenAt?: string } & TxMeta) => {
       const entry = debts.flatMap((d) => d.entries).find((item) => item.id === id);
       if (!entry) throw new Error("Transaction not found");
       const debt = debts.find((d) => d.entries.some((item) => item.id === id));
       const { error } = await supabase.from("debt_entries").update({
         amount: patch.amount,
         note: patch.note ?? null,
+        purpose: patch.purpose ?? null,
+        method: patch.method ?? null,
+        location: patch.location ?? null,
         ...(patch.givenAt ? { given_at: patch.givenAt } : {}),
       } as never).eq("id", id);
       if (error) throw error;
@@ -322,10 +360,13 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
     await fetchAll();
   }, [debts, fetchAll]);
 
-  const updatePayment = useCallback(async (id: string, patch: { amount: number; note?: string; paidAt?: string }) => {
+  const updatePayment = useCallback(async (id: string, patch: { amount: number; note?: string; paidAt?: string } & TxMeta) => {
     const { error } = await supabase.from("debt_payments").update({
       amount: patch.amount,
       note: patch.note ?? null,
+      purpose: patch.purpose ?? null,
+      method: patch.method ?? null,
+      location: patch.location ?? null,
       ...(patch.paidAt ? { paid_at: patch.paidAt } : {}),
     } as never).eq("id", id);
     if (error) throw error;
