@@ -222,6 +222,9 @@ function DebtsPage() {
             <Bell className="size-3" /> Alerts
           </button>
         )}
+        <Link to="/receipts" className="rounded-full bg-secondary px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest">
+          Receipts
+        </Link>
       </header>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
@@ -387,12 +390,13 @@ function DebtsPage() {
 
 
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setOpenLedger(d.id)}
+                <Link
+                  to="/ledger"
+                  search={{ debtId: d.id }}
                   className="py-2.5 rounded-xl bg-neon/10 text-neon text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
                 >
                   <Share2 className="size-3.5" /> View Ledger
-                </button>
+                </Link>
                 <button
                   onClick={() => setPayFor(d)}
                   disabled={left === 0}

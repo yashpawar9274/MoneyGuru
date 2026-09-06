@@ -11,7 +11,9 @@ import {
   downloadReceiptPdf,
   fullDateTime,
   renderReceiptImage,
+  receiptPdf,
   shareReceipt,
+  toJpeg,
   type ReceiptData,
 } from "@/lib/receipt";
 
@@ -136,10 +138,12 @@ function EntryForm({ debt, item, onClose }: { debt: Debt; item?: LedgerItem; onC
   return <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 backdrop-blur-sm"><div className="w-full max-w-[440px] rounded-t-3xl border-t border-border bg-card p-6 pb-8"><div className="flex items-center justify-between"><h3 className="text-lg font-display font-bold">{item ? "Edit Transaction" : "Add Transaction"}</h3><button onClick={onClose} className="size-9 rounded-full bg-secondary grid place-items-center"><X className="size-4" /></button></div><p className="mt-1 text-xs text-foreground/50">{debt.title}</p><div className="mt-4 grid grid-cols-2 gap-2">{(["given", "paid"] as const).map((value) => <button key={value} disabled={!!item} onClick={() => setKind(value)} className={`rounded-xl border py-3 text-xs font-bold ${kind === value ? "border-neon bg-neon/10 text-neon" : "border-transparent bg-secondary"}`}>{value === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}</button>)}</div><label className="mt-4 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Amount<input autoFocus inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-3 text-lg font-bold outline-none" placeholder="0" /></label><label className="mt-3 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Note / reason<input value={note} onChange={(event) => setNote(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-sm outline-none" placeholder="Optional" /></label><div className="mt-3 grid grid-cols-2 gap-2"><label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-xs outline-none" /></label><label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Time<input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-xs outline-none" /></label></div><div className="mt-3"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Purpose</p><div className="mt-1.5 flex flex-wrap gap-1.5">{PURPOSES.map((value) => <button key={value} type="button" onClick={() => setPurpose(purpose === value ? "" : value)} className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${purpose === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"}`}>{value}</button>)}</div></div><div className="mt-3"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Payment method</p><div className="mt-1.5 grid grid-cols-3 gap-1.5">{METHODS.map((value) => <button key={value} type="button" onClick={() => setMethod(method === value ? "" : value)} className={`rounded-xl py-2 text-[11px] font-bold ${method === value ? "bg-neon text-neon-foreground" : "bg-secondary text-foreground/70"}`}>{value}</button>)}</div></div><label className="mt-3 block text-[10px] font-bold uppercase tracking-widest text-foreground/40">Location (optional)<input value={location} onChange={(event) => setLocation(event.target.value)} className="mt-1.5 w-full rounded-xl bg-secondary px-3 py-2.5 text-sm outline-none" placeholder="Only if you want it on the receipt" /></label>{error && <p className="mt-3 text-xs text-danger">{error}</p>}<button onClick={() => void save()} className="mt-5 w-full rounded-2xl bg-neon py-3.5 text-sm font-bold text-neon-foreground">{item ? "Save Changes" : "Add Transaction"}</button></div></div>;
 }
 
-function ReceiptSheet({ debt, onClose, onEdit }: { debt: Debt; onClose: () => void; onEdit: () => void }) {
+export function ReceiptSheet({ debt, onClose, onEdit }: { debt: Debt; onClose: () => void; onEdit: () => void }) {
   const [data, setData] = useState<ReceiptData | null>(null);
   const [png, setPng] = useState<Blob | null>(null);
   const [preview, setPreview] = useState("");
+  const [pdfPreview, setPdfPreview] = useState("");
+  const [previewMode, setPreviewMode] = useState<"image" | "pdf">("image");
   const [busy, setBusy] = useState(true);
   useEffect(() => {
     let url = "";
@@ -151,6 +155,8 @@ function ReceiptSheet({ debt, onClose, onEdit }: { debt: Debt; onClose: () => vo
         setData(receipt);
         setPng(blob);
         setPreview(url);
+        const pdf = await receiptPdf(await toJpeg(blob));
+        setPdfPreview(URL.createObjectURL(pdf));
       } catch (cause) {
         toast.error(cause instanceof Error ? cause.message : "Could not build the receipt");
         onClose();
@@ -181,11 +187,18 @@ function ReceiptSheet({ debt, onClose, onEdit }: { debt: Debt; onClose: () => vo
         <div className="mt-4 min-h-40 overflow-hidden rounded-2xl border border-border bg-black/40">
           {busy || !preview ? (
             <div className="grid h-48 place-items-center"><Loader2 className="size-5 animate-spin text-neon" /></div>
+          ) : previewMode === "pdf" && pdfPreview ? (
+            <iframe title="PDF receipt preview" src={pdfPreview} className="h-[52vh] w-full bg-white" />
           ) : (
             <img src={preview} alt={`MoneyFYI receipt for ${debt.title}`} className="w-full" />
           )}
         </div>
-        <p className="mt-3 text-[11px] text-foreground/50">Check every entry before sharing. Nothing is sent until you tap Share.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1">
+          <button onClick={() => setPreviewMode("image")} className={`rounded-lg py-2 text-xs font-bold ${previewMode === "image" ? "bg-card text-neon" : "text-foreground/50"}`}>Image Preview</button>
+          <button onClick={() => setPreviewMode("pdf")} disabled={!pdfPreview} className={`rounded-lg py-2 text-xs font-bold disabled:opacity-40 ${previewMode === "pdf" ? "bg-card text-neon" : "text-foreground/50"}`}>PDF Preview</button>
+        </div>
+        <p className="mt-3 text-[11px] text-foreground/50">Given by: {data?.givenBy || "MoneyFYI user"} · Received by: {debt.title}{debt.contactPhone ? ` · ${debt.contactPhone}` : ""}</p>
+        <p className="mt-2 text-[11px] text-foreground/50">Check every entry before sharing. Nothing is sent until you tap Share.</p>
         <div className="mt-4 grid gap-2">
           <button onClick={() => void share()} disabled={busy} className="w-full rounded-2xl bg-neon py-3.5 text-sm font-bold text-neon-foreground disabled:opacity-50">
             <Share2 className="mr-1.5 inline size-4" /> Share on WhatsApp

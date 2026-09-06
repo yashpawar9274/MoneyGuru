@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as DebtsRouteImport } from './routes/debts'
+import { Route as LedgerRouteImport } from './routes/ledger'
+import { Route as ReceiptsRouteImport } from './routes/receipts'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +37,16 @@ const PricingRoute = PricingRouteImport.update({
 const DebtsRoute = DebtsRouteImport.update({
   id: '/debts',
   path: '/debts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LedgerRoute = LedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceiptsRoute = ReceiptsRouteImport.update({
+  id: '/receipts',
+  path: '/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
   '/debts': typeof DebtsRoute
+  '/ledger': typeof LedgerRoute
+  '/receipts': typeof ReceiptsRoute
   '/pricing': typeof PricingRoute
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
@@ -103,6 +117,8 @@ export interface FileRoutesByTo {
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
   '/debts': typeof DebtsRoute
+  '/ledger': typeof LedgerRoute
+  '/receipts': typeof ReceiptsRoute
   '/pricing': typeof PricingRoute
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
@@ -118,6 +134,8 @@ export interface FileRoutesById {
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
   '/debts': typeof DebtsRoute
+  '/ledger': typeof LedgerRoute
+  '/receipts': typeof ReceiptsRoute
   '/pricing': typeof PricingRoute
   '/settings': typeof SettingsRoute
   '/api/scan-bill': typeof ApiScanBillRoute
@@ -134,6 +152,8 @@ export interface FileRouteTypes {
     | '/ai'
     | '/analytics'
     | '/debts'
+    | '/ledger'
+    | '/receipts'
     | '/pricing'
     | '/settings'
     | '/api/scan-bill'
@@ -148,6 +168,8 @@ export interface FileRouteTypes {
     | '/ai'
     | '/analytics'
     | '/debts'
+    | '/ledger'
+    | '/receipts'
     | '/pricing'
     | '/settings'
     | '/api/scan-bill'
@@ -162,6 +184,8 @@ export interface FileRouteTypes {
     | '/ai'
     | '/analytics'
     | '/debts'
+    | '/ledger'
+    | '/receipts'
     | '/pricing'
     | '/settings'
     | '/api/scan-bill'
@@ -177,6 +201,8 @@ export interface RootRouteChildren {
   AiRoute: typeof AiRoute
   AnalyticsRoute: typeof AnalyticsRoute
   DebtsRoute: typeof DebtsRoute
+  LedgerRoute: typeof LedgerRoute
+  ReceiptsRoute: typeof ReceiptsRoute
   PricingRoute: typeof PricingRoute
   SettingsRoute: typeof SettingsRoute
   ApiScanBillRoute: typeof ApiScanBillRoute
@@ -208,6 +234,20 @@ declare module '@tanstack/react-router' {
       path: '/debts'
       fullPath: '/debts'
       preLoaderRoute: typeof DebtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ledger': {
+      id: '/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof LedgerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/receipts': {
+      id: '/receipts'
+      path: '/receipts'
+      fullPath: '/receipts'
+      preLoaderRoute: typeof ReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -281,6 +321,8 @@ const rootRouteChildren: RootRouteChildren = {
   AiRoute: AiRoute,
   AnalyticsRoute: AnalyticsRoute,
   DebtsRoute: DebtsRoute,
+  LedgerRoute: LedgerRoute,
+  ReceiptsRoute: ReceiptsRoute,
   PricingRoute: PricingRoute,
   SettingsRoute: SettingsRoute,
   ApiScanBillRoute: ApiScanBillRoute,

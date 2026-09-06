@@ -53,6 +53,8 @@ export interface Debt {
   interestRate?: number; // % per month on the outstanding amount
   reason?: string; // why the money was lent / taken
   contactPhone?: string; // for WhatsApp reminders
+  receiptNumber?: string;
+  receiptCreatedAt?: string;
 }
 
 export type NewDebt = Omit<Debt, "id" | "createdAt" | "payments" | "entries">;
@@ -90,6 +92,7 @@ interface Ctx {
     patch: { amount: number; note?: string; paidAt?: string } & TxMeta,
   ) => Promise<void>;
   removePayment: (id: string) => Promise<void>;
+  ensureReceipt: (debtId: string) => Promise<Pick<Debt, "receiptNumber" | "receiptCreatedAt">>;
   findDebt: (kind: DebtKind, title: string) => Debt | undefined;
   refresh: () => Promise<void>;
 }
@@ -108,6 +111,8 @@ interface DebtRow {
   interest_rate: number | string | null;
   reason: string | null;
   contact_phone: string | null;
+  receipt_number: string | null;
+  receipt_created_at: string | null;
   created_at: string;
 }
 
@@ -164,7 +169,7 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       supabase
         .from("debts")
         .select(
-          "id,kind,title,principal,monthly,due_date,plan_amount,plan_freq,interest_rate,reason,contact_phone,created_at",
+          "id,kind,title,principal,monthly,due_date,plan_amount,plan_freq,interest_rate,reason,contact_phone,receipt_number,receipt_created_at,created_at",
         )
         .order("created_at", { ascending: false }),
       supabase.from("debt_payments").select("id,debt_id,amount,note,paid_at,proof_path,purpose,method,location"),
@@ -213,6 +218,8 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         interestRate: num(r.interest_rate) ?? 0,
         reason: r.reason ?? undefined,
         contactPhone: r.contact_phone ?? undefined,
+        receiptNumber: r.receipt_number ?? undefined,
+        receiptCreatedAt: r.receipt_created_at ?? undefined,
         createdAt: r.created_at,
         payments: (byDebt.get(r.id) ?? []).sort((a, b) => +new Date(b.date) - +new Date(a.date)),
         entries: (entriesByDebt.get(r.id) ?? []).sort(
@@ -379,6 +386,23 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
     await fetchAll();
   }, [fetchAll]);
 
+  const ensureReceipt = useCallback(async (debtId: string) => {
+    const current = debts.find((debt) => debt.id === debtId);
+    if (current?.receiptNumber) {
+      return { receiptNumber: current.receiptNumber, receiptCreatedAt: current.receiptCreatedAt };
+    }
+    const { data, error } = await supabase
+      .from("debts")
+      .update({ receipt_number: null } as never)
+      .eq("id", debtId)
+      .select("receipt_number,receipt_created_at")
+      .single();
+    if (error) throw error;
+    const result = data as unknown as { receipt_number: string; receipt_created_at: string };
+    await fetchAll();
+    return { receiptNumber: result.receipt_number, receiptCreatedAt: result.receipt_created_at };
+  }, [debts, fetchAll]);
+
   const findDebt = useCallback(
     (kind: DebtKind, title: string) =>
       debts.find(
@@ -400,10 +424,11 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       removeEntry,
       updatePayment,
       removePayment,
+      ensureReceipt,
       findDebt,
       refresh: fetchAll,
     }),
-    [debts, loading, addDebt, updateDebt, removeDebt, addPayment, addEntry, updateEntry, removeEntry, updatePayment, removePayment, findDebt, fetchAll],
+    [debts, loading, addDebt, updateDebt, removeDebt, addPayment, addEntry, updateEntry, removeEntry, updatePayment, removePayment, ensureReceipt, findDebt, fetchAll],
   );
   return <DebtsCtx.Provider value={value}>{children}</DebtsCtx.Provider>;
 }

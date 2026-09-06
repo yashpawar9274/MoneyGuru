@@ -20,6 +20,7 @@ export function fullDateTime(iso: string) {
 export interface ReceiptData {
   number: string;
   generatedAt: string;
+  givenBy: string;
   name: string;
   phone?: string;
   totalGiven: number;
@@ -28,15 +29,15 @@ export interface ReceiptData {
   items: LedgerItem[];
 }
 
-export function buildReceipt(debt: Debt): ReceiptData {
+export function buildReceipt(debt: Debt, givenBy = "MoneyFYI user"): ReceiptData {
   const items = ledger(debt).slice().sort((a, b) => +new Date(a.date) - +new Date(b.date));
   const totalGiven = items.filter((i) => i.kind === "given").reduce((s, i) => s + i.amount, 0);
   const totalReturned = items.filter((i) => i.kind === "paid").reduce((s, i) => s + i.amount, 0);
-  const now = new Date();
-  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  const now = new Date(debt.receiptCreatedAt ?? Date.now());
   return {
-    number: `MFY-${stamp}-${debt.id.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
+    number: debt.receiptNumber ?? `MFYI-UDHARI-${now.toISOString().slice(0, 10).replace(/-/g, "")}-${debt.id.replace(/-/g, "").slice(0, 4).toUpperCase()}`,
     generatedAt: fullDateTime(now.toISOString()),
+    givenBy,
     name: debt.title,
     phone: debt.contactPhone?.trim() || undefined,
     totalGiven,
@@ -50,14 +51,17 @@ export function receiptMessage(r: ReceiptData) {
   return [
     `Hi ${r.name},`,
     "",
-    "This is your udhari/payment record as per MoneyFYI.",
+    "This is your payment/udhari receipt from MoneyFYI.",
     "",
-    `Total given: ${inr(r.totalGiven)}`,
-    `Total received: ${inr(r.totalReturned)}`,
-    `Pending balance: ${inr(r.pending)}`,
+    `Receipt No: ${r.number}`,
+    `Total Amount Given: ${inr(r.totalGiven)}`,
+    `Total Amount Received: ${inr(r.totalReturned)}`,
+    `Pending Balance: ${inr(r.pending)}`,
     "",
-    `Receipt no: ${r.number}`,
-    "Please check the attached receipt.",
+    "Please verify the attached receipt.",
+    "",
+    `— ${r.givenBy}`,
+    "Generated via MoneyFYI",
   ].join("\n");
 }
 
