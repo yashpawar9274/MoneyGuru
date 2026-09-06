@@ -443,6 +443,7 @@ export function paidTotal(d: Debt) {
   return d.payments.reduce((s, p) => s + p.amount, 0);
 }
 
+<<<<<<< HEAD
 /**
  * The principal is cached for cards and forecasts. The ledger entries are the
  * receipt source of truth, so keep this helper available for future displays.
@@ -453,6 +454,8 @@ export function ledgerGivenTotal(d: Debt) {
     : d.principal;
 }
 
+=======
+>>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
 /** Months elapsed (fractional) since the debt was created. */
 export function monthsElapsed(d: Debt) {
   return Math.max(0, (Date.now() - +new Date(d.createdAt)) / (30 * 86400000));

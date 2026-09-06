@@ -67,6 +67,7 @@ export function ledger(d: Debt): LedgerItem[] {
     method: p.method,
     location: p.location,
   }));
+<<<<<<< HEAD
   // Keep a deterministic order when two entries were created in the same minute.
   // Receipt rendering sorts this timeline oldest-first; the ledger UI can reverse it.
   return [...given, ...paid].sort((a, b) => {
@@ -80,6 +81,9 @@ export function givenTotal(d: Debt) {
   return ledger(d)
     .filter((item) => item.kind === "given")
     .reduce((sum, item) => sum + item.amount, 0);
+=======
+  return [...given, ...paid].sort((a, b) => +new Date(b.date) - +new Date(a.date));
+>>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
 }
 
 const fmtTime = (iso: string) =>

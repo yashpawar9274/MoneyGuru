@@ -30,12 +30,16 @@ export interface ReceiptData {
 }
 
 export function buildReceipt(debt: Debt, givenBy = "MoneyFYI user"): ReceiptData {
+<<<<<<< HEAD
   // A receipt is a statement, not the newest transaction. Always render the
   // complete person-wise ledger, oldest to newest.
   const items = ledger(debt).slice().sort((a, b) => {
     const difference = +new Date(a.date) - +new Date(b.date);
     return difference || a.id.localeCompare(b.id);
   });
+=======
+  const items = ledger(debt).slice().sort((a, b) => +new Date(a.date) - +new Date(b.date));
+>>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
   const totalGiven = items.filter((i) => i.kind === "given").reduce((s, i) => s + i.amount, 0);
   const totalReturned = items.filter((i) => i.kind === "paid").reduce((s, i) => s + i.amount, 0);
   const now = new Date(debt.receiptCreatedAt ?? Date.now());
@@ -47,8 +51,11 @@ export function buildReceipt(debt: Debt, givenBy = "MoneyFYI user"): ReceiptData
     phone: debt.contactPhone?.trim() || undefined,
     totalGiven,
     totalReturned,
+<<<<<<< HEAD
     // Do not use debt.principal here: older records and edited entries can make
     // it stale. The receipt totals must be calculated from its own rows.
+=======
+>>>>>>> 34dec65d6073d241d0d23ef8329e8083dd6a8535
     pending: Math.max(0, totalGiven - totalReturned),
     items,
   };
