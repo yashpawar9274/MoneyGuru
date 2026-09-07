@@ -87,6 +87,13 @@ export function GeminiLiveAssistant() {
       socket.current = live;
       live.onopen = () => {
         setConnected(true); setStatus("Listening...");
+        live.send(JSON.stringify({ setup: {
+          model: "models/gemini-2.0-flash-live-001",
+          generationConfig: { responseModalities: ["AUDIO"] },
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+          systemInstruction: { parts: [{ text: "You are MoneyFYI Live, a concise Hindi-English money assistant. Help users understand spending. Never claim an action happened unless the app confirms it. For adding income or expense, ask for amount and category clearly." }] },
+        } }));
         const source = context.createMediaStreamSource(stream);
         const node = context.createScriptProcessor(4096, 1, 1);
         node.onaudioprocess = (event) => {

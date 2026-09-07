@@ -24,15 +24,6 @@ export const Route = createFileRoute("/api/gemini-live-token")({
             uses: 1,
             expireTime: expires,
             newSessionExpireTime: expires,
-            liveConnectConstraints: {
-              model: "models/gemini-2.0-flash-live-001",
-              config: {
-                responseModalities: ["AUDIO"],
-                inputAudioTranscription: {},
-                outputAudioTranscription: {},
-                systemInstruction: "You are MoneyFYI Live, a concise Hindi-English money assistant. Help users understand spending. Never claim an action happened unless the app confirms it. For adding income or expense, ask for amount and category clearly.",
-              },
-            },
           }),
         });
         if (!response.ok) return new Response(await response.text(), { status: response.status });
