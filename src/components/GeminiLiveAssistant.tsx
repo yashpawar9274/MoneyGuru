@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/store";
 import { CATEGORIES, type Category, type TxType } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
+import { getGeminiKey } from "@/lib/voices";
 
 type PendingAction = { type: TxType; amount: number; category: Category; note: string };
 type LiveMessage = { serverContent?: { inputTranscription?: { text?: string }; outputTranscription?: { text?: string }; modelTurn?: { parts?: Array<{ inlineData?: { data?: string } }> } } };
@@ -76,7 +77,7 @@ export function GeminiLiveAssistant() {
     try {
       setStatus("Connecting to Gemini Live...");
       const { data: sessionData } = await supabase.auth.getSession();
-      const tokenResponse = await fetch("/api/gemini-live-token", { method: "POST", headers: sessionData.session ? { Authorization: `Bearer ${sessionData.session.access_token}` } : undefined });
+      const tokenResponse = await fetch("/api/gemini-live-token", { method: "POST", headers: { "Content-Type": "application/json", ...(sessionData.session ? { Authorization: `Bearer ${sessionData.session.access_token}` } : {}) }, body: JSON.stringify({ apiKey: getGeminiKey() }) });
       if (!tokenResponse.ok) throw new Error(await tokenResponse.text());
       const { token } = await tokenResponse.json() as { token?: string };
       if (!token) throw new Error("Gemini token unavailable");

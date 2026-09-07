@@ -5,7 +5,7 @@ import { Check, Trash2, Volume2, KeyRound, Loader2, Eye, EyeOff } from "lucide-r
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
-import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getAutoSpeak, setAutoSpeak, VOICE_LANGS, getVoiceLang, setVoiceLang, type VoiceLang } from "@/lib/voices";
+import { VOICES, getVoiceId, setVoiceId, getElevenKey, setElevenKey, getGeminiKey, setGeminiKey, getAutoSpeak, setAutoSpeak, VOICE_LANGS, getVoiceLang, setVoiceLang, type VoiceLang } from "@/lib/voices";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -26,6 +26,8 @@ function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [userKey, setUserKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [geminiKey, setGeminiKeyState] = useState("");
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [autoSpeak, setAutoSpeakState] = useState(true);
   const [voiceLang, setVoiceLangState] = useState<VoiceLang>("auto");
 
@@ -49,6 +51,7 @@ function SettingsPage() {
     setVoice(getVoiceId());
     const k = getElevenKey();
     setUserKey(k);
+    setGeminiKeyState(getGeminiKey());
     probe(k);
   }, []);
 
@@ -148,6 +151,32 @@ function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="mt-4 rounded-2xl bg-card p-4">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Gemini Live API Key</p>
+            <p className="mt-1 text-xs text-foreground/60">Pro users can talk to the AI in real time. Stored only on this device.</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-neon/15 px-2 py-1 text-[10px] font-bold uppercase text-neon">Pro</span>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <input
+              type={showGeminiKey ? "text" : "password"}
+              value={geminiKey}
+              onChange={(event) => setGeminiKeyState(event.target.value)}
+              placeholder="AIza..."
+              className="w-full rounded-xl bg-secondary/60 px-3 py-2.5 pr-9 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-neon"
+            />
+            <button type="button" onClick={() => setShowGeminiKey((value) => !value)} className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/40" aria-label={showGeminiKey ? "Hide Gemini key" : "Show Gemini key"}>
+              {showGeminiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+            </button>
+          </div>
+          <button onClick={() => { setGeminiKey(geminiKey.trim()); toast.success(geminiKey.trim() ? "Gemini key saved" : "Gemini key cleared"); }} className="rounded-xl bg-neon px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-neon-foreground">Save</button>
+        </div>
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="mt-3 flex items-center gap-2 text-xs font-bold text-neon"><KeyRound className="size-3.5" /> Get Gemini API key</a>
       </section>
 
 
@@ -252,7 +281,7 @@ function SettingsPage() {
       </section>
 
       <p className="text-center text-[10px] text-foreground/30 mt-8 uppercase tracking-widest font-bold">
-        MONEY.FYI · v1.0
+        MONEY.FYI · v1.1.0
       </p>
     </div>
   );

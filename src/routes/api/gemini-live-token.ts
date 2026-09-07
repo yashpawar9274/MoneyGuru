@@ -4,7 +4,7 @@ import { getRequest } from "@tanstack/react-start/server";
 export const Route = createFileRoute("/api/gemini-live-token")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
         const authorization = getRequestAuthorization();
         if (!authorization) return Response.json({ error: "Sign in required" }, { status: 401 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -13,7 +13,8 @@ export const Route = createFileRoute("/api/gemini-live-token")({
         const { data: subscription } = await supabaseAdmin.from("subscriptions").select("plan,status,current_period_end").eq("user_id", authData.user.id).maybeSingle();
         const activePro = subscription?.status === "active" && (subscription.plan === "lifetime" || (subscription.plan === "pro" && (!subscription.current_period_end || +new Date(subscription.current_period_end) > Date.now())));
         if (!activePro) return Response.json({ error: "Gemini Live is a Pro feature" }, { status: 403 });
-        const apiKey = process.env["GEMINI_API_KEY"];
+        const body = await request.json().catch(() => ({})) as { apiKey?: string };
+        const apiKey = body.apiKey?.trim() || process.env["GEMINI_API_KEY"];
         if (!apiKey) return Response.json({ error: "GEMINI_API_KEY is not configured" }, { status: 503 });
         const expires = new Date(Date.now() + 10 * 60_000).toISOString();
         const response = await fetch("https://generativelanguage.googleapis.com/v1alpha/auth_tokens", {
