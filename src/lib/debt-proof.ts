@@ -108,13 +108,13 @@ export function proofText(d: Debt) {
   lines.push("");
   for (const it of items) {
     lines.push(
-      `${it.kind === "given" ? "➕ Diya" : "✅ Wapas mila"} ${inr(it.amount)} — ${fmtTime(it.date)}${
+      `${it.kind === "given" ? "Diya" : "Wapas mila"} ${inr(it.amount)} — ${fmtTime(it.date)}${
         it.note ? ` (${it.note})` : ""
       }`,
     );
   }
   lines.push("");
-  lines.push(`Total diya: ${inr(d.principal)}`);
+  lines.push(`Total diya: ${inr(givenTotal(d))}`);
   lines.push(`Total wapas: ${inr(paidTotal(d))}`);
   lines.push(`Pending: ${inr(remaining(d))}`);
   lines.push("");

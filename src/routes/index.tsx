@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Bell, TrendingUp, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Bell, TrendingUp, ArrowDownRight, ArrowUpRight, HandCoins } from "lucide-react";
 import { motion } from "framer-motion";
 import { groupByDay, inRange, totals, useStore } from "@/lib/store";
 import { categoryMeta } from "@/lib/types";
@@ -59,7 +59,7 @@ function Dashboard() {
           </div>
           <div>
             <p className="text-[10px] text-foreground/50 leading-none uppercase tracking-widest">{t("welcome")}</p>
-            <p className="text-sm font-semibold mt-1">Hey there 👋</p>
+            <p className="text-sm font-semibold mt-1">Hey there</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ function Dashboard() {
           className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-2xl active:scale-[0.99] transition-transform"
         >
           <div className="flex items-center gap-3">
-            <div className="size-11 rounded-xl bg-gradient-to-br from-accent to-neon grid place-items-center text-xl">🤝</div>
+            <div className="size-11 rounded-xl bg-gradient-to-br from-accent to-neon grid place-items-center text-neon-foreground"><HandCoins className="size-5" /></div>
             <div>
               <p className="text-sm font-semibold">Udhari & EMI</p>
               <p className="text-[10px] text-foreground/50 uppercase tracking-widest">Track loans • Mark payments</p>
@@ -160,8 +160,8 @@ function Dashboard() {
                     return (
                       <div key={tx.id} className="flex items-center justify-between p-3.5 bg-card/60 rounded-2xl border border-border/50">
                         <div className="flex items-center gap-3">
-                          <div className="size-10 bg-secondary rounded-xl flex items-center justify-center text-xl">
-                            {c.emoji}
+                          <div className="size-10 bg-secondary rounded-xl flex items-center justify-center text-neon">
+                            <c.Icon className="size-5" />
                           </div>
                           <div>
                             <p className="text-sm font-semibold leading-tight">{tx.note || c.label}</p>

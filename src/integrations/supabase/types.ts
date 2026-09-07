@@ -148,6 +148,8 @@ export type Database = {
           plan_freq: string | null
           principal: number
           reason: string | null
+          receipt_created_at: string | null
+          receipt_number: string | null
           title: string
           user_id: string
         }
@@ -163,6 +165,8 @@ export type Database = {
           plan_freq?: string | null
           principal: number
           reason?: string | null
+          receipt_created_at?: string | null
+          receipt_number?: string | null
           title: string
           user_id?: string
         }
@@ -178,6 +182,8 @@ export type Database = {
           plan_freq?: string | null
           principal?: number
           reason?: string | null
+          receipt_created_at?: string | null
+          receipt_number?: string | null
           title?: string
           user_id?: string
         }

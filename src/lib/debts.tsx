@@ -206,11 +206,16 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       entriesByDebt.set(e.debt_id, list);
     }
     setDebts(
-      ((rows ?? []) as unknown as DebtRow[]).map((r) => ({
+      ((rows ?? []) as unknown as DebtRow[]).map((r) => {
+      const rowEntries = entriesByDebt.get(r.id) ?? [];
+      // Source of truth = the ledger. The stored principal is only a fallback
+      // for legacy rows that have no entries yet, so totals can never drift.
+      const givenSum = rowEntries.reduce((sum, entry) => sum + entry.amount, 0);
+      return ({
         id: r.id,
         kind: r.kind as DebtKind,
         title: r.title,
-        principal: Number(r.principal),
+        principal: rowEntries.length > 0 ? givenSum : Number(r.principal),
         monthly: num(r.monthly),
         dueDate: r.due_date ?? undefined,
         planAmount: num(r.plan_amount),
@@ -222,10 +227,9 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         receiptCreatedAt: r.receipt_created_at ?? undefined,
         createdAt: r.created_at,
         payments: (byDebt.get(r.id) ?? []).sort((a, b) => +new Date(b.date) - +new Date(a.date)),
-        entries: (entriesByDebt.get(r.id) ?? []).sort(
-          (a, b) => +new Date(b.date) - +new Date(a.date),
-        ),
-      })),
+        entries: rowEntries.slice().sort((a, b) => +new Date(b.date) - +new Date(a.date)),
+      });
+      }),
     );
     setLoading(false);
   }, []);
@@ -265,9 +269,19 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         .update(toDbPatch(patch) as never)
         .eq("id", id);
       if (error) throw error;
+      // Editing the total amount of a single-entry debt must move that entry too,
+      // otherwise the derived ledger total would ignore the edit.
+      const current = debts.find((d) => d.id === id);
+      if (patch.principal !== undefined && current && current.entries.length === 1) {
+        const only = current.entries[0]!;
+        await supabase
+          .from("debt_entries")
+          .update({ amount: patch.principal } as never)
+          .eq("id", only.id);
+      }
       await fetchAll();
     },
-    [fetchAll],
+    [debts, fetchAll],
   );
 
   const removeDebt = useCallback(async (id: string) => {
@@ -309,7 +323,6 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       givenAt?: string,
       meta?: TxMeta,
     ) => {
-      const current = debts.find((d) => d.id === debtId);
       const { error } = await supabase.from("debt_entries").insert({
         debt_id: debtId,
         amount,
@@ -321,23 +334,13 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         ...(givenAt ? { given_at: givenAt } : {}),
       } as never);
       if (error) throw error;
-      if (current) {
-        const { error: e2 } = await supabase
-          .from("debts")
-          .update({ principal: current.principal + amount } as never)
-          .eq("id", debtId);
-        if (e2) throw e2;
-      }
       await fetchAll();
     },
-    [debts, fetchAll],
+    [fetchAll],
   );
 
   const updateEntry = useCallback(
     async (id: string, patch: { amount: number; note?: string; givenAt?: string } & TxMeta) => {
-      const entry = debts.flatMap((d: Debt) => d.entries).find((item: DebtEntry) => item.id === id);
-      if (!entry) throw new Error("Transaction not found");
-      const debt = debts.find((d: Debt) => d.entries.some((item: DebtEntry) => item.id === id));
       const { error } = await supabase.from("debt_entries").update({
         amount: patch.amount,
         note: patch.note ?? null,
@@ -347,25 +350,16 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
         ...(patch.givenAt ? { given_at: patch.givenAt } : {}),
       } as never).eq("id", id);
       if (error) throw error;
-      if (debt) {
-        const { error: debtError } = await supabase.from("debts").update({ principal: debt.principal + patch.amount - entry.amount } as never).eq("id", debt.id);
-        if (debtError) throw debtError;
-      }
       await fetchAll();
     },
-    [debts, fetchAll],
+    [fetchAll],
   );
 
   const removeEntry = useCallback(async (id: string) => {
-    const entry = debts.flatMap((d: Debt) => d.entries).find((item: DebtEntry) => item.id === id);
-    const debt = debts.find((d: Debt) => d.entries.some((item: DebtEntry) => item.id === id));
-    if (!entry || !debt) throw new Error("Transaction not found");
     const { error } = await supabase.from("debt_entries").delete().eq("id", id);
     if (error) throw error;
-    const { error: debtError } = await supabase.from("debts").update({ principal: Math.max(0, debt.principal - entry.amount) } as never).eq("id", debt.id);
-    if (debtError) throw debtError;
     await fetchAll();
-  }, [debts, fetchAll]);
+  }, [fetchAll]);
 
   const updatePayment = useCallback(async (id: string, patch: { amount: number; note?: string; paidAt?: string } & TxMeta) => {
     const { error } = await supabase.from("debt_payments").update({
@@ -564,7 +558,7 @@ export function whatsappReminder(d: Debt, appLink: string) {
   const interest = (d.interestRate ?? 0) > 0 ? interestAccrued(d) : 0;
 
   const lines = [
-    `Hi ${d.title}! 👋`,
+    `Hi ${d.title}!`,
     "",
     `Chhota reminder: ₹${d.principal.toLocaleString("en-IN")} udhaar${d.reason ? ` (${d.reason})` : ""} lia tha.`,
   ];
@@ -573,7 +567,7 @@ export function whatsappReminder(d: Debt, appLink: string) {
   }
   lines.push(`Pending amount: ₹${left.toLocaleString("en-IN")}`);
   if (due) lines.push(`Due date: ${due}`);
-  lines.push("", "Jab possible ho settle kar dena 🙏", "", `Tracked on MONEY.FYI — ${appLink}`);
+  lines.push("", "Jab possible ho settle kar dena.", "", `Tracked on MONEY.FYI — ${appLink}`);
 
   return lines.join("\n");
 }
