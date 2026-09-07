@@ -124,6 +124,12 @@ function RootComponent() {
   const [addOpen, setAddOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
 
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js");
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>

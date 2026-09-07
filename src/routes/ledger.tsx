@@ -4,7 +4,7 @@ import { ArrowLeft, FileText, Pencil, Plus, Share2, Trash2 } from "lucide-react"
 import { toast } from "sonner";
 import { EntryForm, ReceiptSheet } from "@/components/UdhaariLedgerSheet";
 import { ledger, type LedgerItem } from "@/lib/debt-proof";
-import { paidTotal, remaining, useDebts } from "@/lib/debts";
+import { ledgerGivenTotal, paidTotal, remaining, useDebts } from "@/lib/debts";
 
 export const Route = createFileRoute("/ledger")({
   validateSearch: (search: Record<string, unknown>) => ({ debtId: String(search.debtId ?? "") }),
@@ -41,7 +41,7 @@ function LedgerPage() {
       </main>
     );
 
-  const totalGiven = items.filter((item) => item.kind === "given").reduce((sum, item) => sum + item.amount, 0);
+  const totalGiven = ledgerGivenTotal(debt);
   const totalReceived = paidTotal(debt);
   const remove = (item: LedgerItem) => {
     if (item.id.endsWith("-base")) return toast.error("This old entry cannot be deleted");

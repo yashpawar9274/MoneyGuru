@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, Download, FileText, Loader2, Pencil, Share2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { ledger, type LedgerItem } from "@/lib/debt-proof";
-import { type Debt, type DebtKind, useDebts } from "@/lib/debts";
+import { ledgerGivenTotal, type Debt, type DebtKind, useDebts } from "@/lib/debts";
 import {
   METHODS,
   PURPOSES,
@@ -135,7 +135,7 @@ export function EntryForm({ debt, item, onClose }: { debt: Debt; item?: LedgerIt
       onClose();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not save transaction."); }
   };
-  const currentPending = Math.max(0, debt.principal - debt.payments.reduce((sum, payment) => sum + payment.amount, 0));
+  const currentPending = Math.max(0, ledgerGivenTotal(debt) - debt.payments.reduce((sum, payment) => sum + payment.amount, 0));
   const enteredAmount = Number(amount) || 0;
   const newPending = kind === "given" ? currentPending + enteredAmount : Math.max(0, currentPending - enteredAmount);
 
@@ -376,9 +376,13 @@ export function UdhaariLedgerSheet({ debt, onClose }: { debt: Debt | null; onClo
   const [formOpen, setFormOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const items = useMemo(() => debt ? ledger(debt) : [], [debt]);
-  useEffect(() => { setEditing(undefined); setFormOpen(false); setReceiptOpen(false); }, [debt]);
+  useEffect(() => {
+    setEditing(undefined);
+    setFormOpen(false);
+    setReceiptOpen(false);
+  }, [debt]);
   if (!debt) return null;
-  const pending = Math.max(0, debt.principal - debt.payments.reduce((sum, payment) => sum + payment.amount, 0));
+  const pending = Math.max(0, ledgerGivenTotal(debt) - debt.payments.reduce((sum, payment) => sum + payment.amount, 0));
   const remove = (item: LedgerItem) => { if (item.id.endsWith("-base")) return toast.error("Legacy entry cannot be deleted"); if (!confirm("Delete this transaction?")) return; void (item.kind === "given" ? removeEntry(item.id) : removePayment(item.id)).then(() => toast.success("Transaction deleted")).catch((error) => toast.error(error instanceof Error ? error.message : "Could not delete")); };
   return <AnimatePresence>{<><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" /><motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="fixed bottom-0 left-1/2 z-50 max-h-[90vh] w-full max-w-[440px] -translate-x-1/2 overflow-y-auto rounded-t-3xl border-t border-border bg-card p-6 pb-8"><div className="flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-widest text-neon">Udhaari Ledger</p><h2 className="mt-1 text-2xl font-display font-bold">{debt.title}</h2><p className="text-xs text-foreground/50">{debt.contactPhone || ""}</p></div><button onClick={onClose} className="size-9 rounded-full bg-secondary grid place-items-center"><X className="size-4" /></button></div><div className="mt-5 rounded-2xl border border-neon/30 bg-neon/10 p-4"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">Total Pending</p><p className="mt-1 text-3xl font-display font-bold text-neon">{inr(pending)}</p><p className="mt-1 text-xs text-foreground/50">{items.length} transaction{items.length === 1 ? "" : "s"}</p></div><div className="mt-4 flex gap-2"><button onClick={() => { setEditing(undefined); setFormOpen(true); }} className="flex-1 rounded-xl bg-neon py-3 text-xs font-bold text-neon-foreground">+ ADD TRANSACTION</button><button onClick={() => void shareStatement(debt, items).catch(() => toast.error("Could not share statement"))} className="rounded-xl bg-secondary px-4 text-xs font-bold"><Share2 className="mr-1 inline size-3.5" /> Share</button></div><button onClick={() => setReceiptOpen(true)} className="mt-3 w-full rounded-2xl border border-neon/40 bg-neon/10 py-3.5 text-xs font-bold text-neon"><FileText className="mr-1.5 inline size-4" /> GENERATE RECEIPT & SHARE</button><div className="mt-5 space-y-2">{items.map((item) => <div key={item.id} className="rounded-2xl border border-border bg-secondary/40 p-3"><div className="flex items-start gap-3"><div className={`mt-1 grid size-8 place-items-center rounded-lg ${item.kind === "given" ? "bg-danger/15 text-danger" : "bg-success/15 text-success"}`}>{item.kind === "given" ? "↑" : <Check className="size-4" />}</div><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{item.kind === "given" ? "Maine Diya" : "Mujhe Wapas Mila"}</p><p className="text-[11px] text-foreground/50">{new Date(item.date).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>{item.note && <p className="mt-1 text-xs text-foreground/70">{item.note}</p>}{(item.purpose || item.method || item.location) && <p className="mt-1 text-[11px] text-foreground/50">{[item.purpose, item.method, item.location].filter(Boolean).join(" · ")}</p>}</div><p className={`text-sm font-bold ${item.kind === "given" ? "text-danger" : "text-success"}`}>{item.kind === "given" ? "+" : "-"}{inr(item.amount)}</p></div>{!item.id.endsWith("-base") && <div className="mt-2 flex justify-end gap-3"><button onClick={() => { setEditing(item); setFormOpen(true); }} className="text-[10px] font-bold text-neon"><Pencil className="mr-1 inline size-3" /> Edit</button><button onClick={() => remove(item)} className="text-[10px] font-bold text-danger"><Trash2 className="mr-1 inline size-3" /> Delete</button></div>}</div>)}</div>{formOpen && <EntryForm debt={debt} item={editing} onClose={() => { setFormOpen(false); setEditing(undefined); }} />}{receiptOpen && <ReceiptSheet debt={debt} onClose={() => setReceiptOpen(false)} onEdit={() => { setReceiptOpen(false); setEditing(undefined); setFormOpen(true); }} />}</motion.div></>}</AnimatePresence>;
 }

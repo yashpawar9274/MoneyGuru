@@ -16,6 +16,8 @@ export const Route = createFileRoute("/api/public/cashfree-webhook")({
         const a = Buffer.from(sig);
         const b = Buffer.from(expected);
         if (a.length !== b.length || !timingSafeEqual(a, b)) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.from("webhook_logs").insert({ provider: "cashfree", signature_valid: false, http_status: 401, message: "Invalid signature" });
           return new Response("Invalid signature", { status: 401 });
         }
 
@@ -26,14 +28,26 @@ export const Route = createFileRoute("/api/public/cashfree-webhook")({
         try {
           payload = JSON.parse(raw);
         } catch {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.from("webhook_logs").insert({ provider: "cashfree", signature_valid: true, http_status: 400, message: "Bad payload" });
           return new Response("Bad payload", { status: 400 });
         }
+
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin.from("webhook_logs").insert({
+          provider: "cashfree",
+          event_type: payload.type ?? null,
+          order_id: payload.data?.order?.order_id ?? null,
+          status: payload.data?.payment?.payment_status ?? null,
+          signature_valid: true,
+          http_status: 200,
+          payload,
+        });
 
         const orderId = payload.data?.order?.order_id;
         const status = payload.data?.payment?.payment_status;
         if (!orderId) return new Response("ok");
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         if (status === "SUCCESS") {
           const { error } = await supabaseAdmin.rpc("apply_paid_order", { p_order_id: orderId });
           if (error) console.error("apply_paid_order failed", error.message);

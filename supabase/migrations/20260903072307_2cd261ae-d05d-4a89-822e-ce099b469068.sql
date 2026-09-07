@@ -60,6 +60,18 @@ drop policy if exists "admins read all profiles" on public.profiles;
 create policy "admins read all profiles" on public.profiles
 for select to authenticated using (public.has_role(auth.uid(), 'admin'));
 
+drop policy if exists "admins read all debts" on public.debts;
+create policy "admins read all debts" on public.debts
+for select to authenticated using (public.has_role(auth.uid(), 'admin'));
+
+drop policy if exists "admins read all debt payments" on public.debt_payments;
+create policy "admins read all debt payments" on public.debt_payments
+for select to authenticated using (public.has_role(auth.uid(), 'admin'));
+
+drop policy if exists "admins read all debt entries" on public.debt_entries;
+create policy "admins read all debt entries" on public.debt_entries
+for select to authenticated using (public.has_role(auth.uid(), 'admin'));
+
 -- Owner (Yash Pawar) becomes admin
 insert into public.user_roles (user_id, role)
 select id, 'admin'::public.app_role from auth.users
@@ -104,6 +116,8 @@ $$;
 alter table public.payments replica identity full;
 alter table public.subscriptions replica identity full;
 alter table public.webhook_logs replica identity full;
+alter table public.debts replica identity full;
+alter table public.profiles replica identity full;
 do $$ begin
   alter publication supabase_realtime add table public.payments;
 exception when duplicate_object then null; end $$;
@@ -112,4 +126,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.webhook_logs;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.debts;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.profiles;
 exception when duplicate_object then null; end $$;

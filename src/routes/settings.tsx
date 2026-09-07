@@ -289,8 +289,8 @@ function AccountCard() {
   return (
     <section className="mb-4 bg-card rounded-2xl p-4">
       <div className="flex items-center gap-3">
-        <div className="size-11 rounded-full bg-accent grid place-items-center text-xs font-bold text-accent-foreground">
-          {initials}
+        <div className="size-11 shrink-0 overflow-hidden rounded-full bg-accent grid place-items-center text-xs font-bold text-accent-foreground">
+          {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="size-full object-cover" /> : initials}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold truncate">{profile?.full_name || "Your profile"}</p>
