@@ -26,7 +26,6 @@ import { AddTransactionSheet } from "@/components/AddTransactionSheet";
 import { CalculatorPopup } from "@/components/CalculatorPopup";
 import { Toaster } from "sonner";
 import { UpdateNotice } from "@/components/UpdateNotice";
-import { GeminiLiveAssistant } from "@/components/GeminiLiveAssistant";
 
 function NotFoundComponent() {
   return (
@@ -141,7 +140,6 @@ function RootComponent() {
               <DebtsProvider>
                 <SplashScreen />
                 <UpdateNotice />
-                <GeminiLiveAssistant />
                 <AutoVoiceAgent />
                 <TrialLock />
 

@@ -12,7 +12,6 @@ export const VOICES = [
 export const DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
 const KEY = "money_fyi_voice";
 const ELEVEN_KEY = "money_fyi_eleven_key";
-const GEMINI_KEY = "money_fyi_gemini_key";
 
 export function getVoiceId(): string {
   if (typeof window === "undefined") return DEFAULT_VOICE_ID;
@@ -28,16 +27,6 @@ export function getElevenKey(): string {
 export function setElevenKey(k: string) {
   if (k) localStorage.setItem(ELEVEN_KEY, k);
   else localStorage.removeItem(ELEVEN_KEY);
-}
-
-export function getGeminiKey(): string {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(GEMINI_KEY) || "";
-}
-
-export function setGeminiKey(k: string) {
-  if (k) localStorage.setItem(GEMINI_KEY, k);
-  else localStorage.removeItem(GEMINI_KEY);
 }
 
 const AUTO_KEY = "money_fyi_autospeak";

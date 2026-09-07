@@ -19,7 +19,6 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
-import { Route as ApiGeminiLiveTokenRouteImport } from './routes/api/gemini-live-token'
 import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
 import { Route as ApiPublicCashfreeWebhookRouteImport } from './routes/api/public/cashfree-webhook'
 import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
@@ -76,11 +75,6 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGeminiLiveTokenRoute = ApiGeminiLiveTokenRouteImport.update({
-  id: '/api/gemini-live-token',
-  path: '/api/gemini-live-token',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiScanBillRoute = ApiScanBillRouteImport.update({
   id: '/api/scan-bill',
   path: '/api/scan-bill',
@@ -109,7 +103,6 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/api/gemini-live-token': typeof ApiGeminiLiveTokenRoute
   '/admin': typeof AdminRoute
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
@@ -127,7 +120,6 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
-  '/api/gemini-live-token': typeof ApiGeminiLiveTokenRoute
   '/admin': typeof AdminRoute
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
@@ -145,7 +137,6 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesById {
-  '/api/gemini-live-token': typeof ApiGeminiLiveTokenRoute
   '/admin': typeof AdminRoute
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
@@ -166,7 +157,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/api/gemini-live-token'
     | '/admin'
     | '/'
     | '/ai'
@@ -184,7 +174,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/api/gemini-live-token'
     | '/admin'
     | '/'
     | '/ai'
@@ -201,7 +190,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
-    | '/api/gemini-live-token'
     | '/admin'
     | '__root__'
     | '/'
@@ -221,7 +209,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  ApiGeminiLiveTokenRoute: typeof ApiGeminiLiveTokenRoute
   AdminRoute: typeof AdminRoute
   IndexRoute: typeof IndexRoute
   AiRoute: typeof AiRoute
@@ -241,13 +228,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/api/gemini-live-token': {
-      id: '/api/gemini-live-token'
-      path: '/api/gemini-live-token'
-      fullPath: '/api/gemini-live-token'
-      preLoaderRoute: typeof ApiGeminiLiveTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -357,7 +337,6 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  ApiGeminiLiveTokenRoute: ApiGeminiLiveTokenRoute,
   AdminRoute: AdminRoute,
   IndexRoute: IndexRoute,
   AiRoute: AiRoute,
