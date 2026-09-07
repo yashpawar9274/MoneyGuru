@@ -14,6 +14,7 @@ import SettingsScreen from "./src/screens/Settings";
 import PricingScreen from "./src/screens/Pricing";
 import UdhaariScreen from "./src/screens/Udhaari";
 import { UdhaariProvider } from "./src/lib/udhaari";
+import UpdateNotice from "./src/components/UpdateNotice";
 
 const qc = new QueryClient();
 type Tab = "home" | "udhaari" | "analytics" | "ai" | "pro" | "settings";
@@ -65,6 +66,7 @@ export default function App() {
           <UdhaariProvider>
             <SafeAreaProvider>
               <StatusBar style="light" />
+              <UpdateNotice />
               <Shell />
             </SafeAreaProvider>
           </UdhaariProvider>

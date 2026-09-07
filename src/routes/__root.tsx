@@ -25,6 +25,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { AddTransactionSheet } from "@/components/AddTransactionSheet";
 import { CalculatorPopup } from "@/components/CalculatorPopup";
 import { Toaster } from "sonner";
+import { UpdateNotice } from "@/components/UpdateNotice";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,7 @@ function RootComponent() {
             <StoreProvider>
               <DebtsProvider>
                 <SplashScreen />
+                <UpdateNotice />
                 <AutoVoiceAgent />
                 <TrialLock />
 
