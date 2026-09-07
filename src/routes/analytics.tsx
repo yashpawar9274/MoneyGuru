@@ -149,7 +149,7 @@ function Analytics() {
                 return (
                   <div key={c.cat} className="flex items-center gap-2 text-xs">
                     <span className="size-2 rounded-full shrink-0" style={{ background: PALETTE[i % PALETTE.length] }} />
-                    <span className="flex-1 truncate">{c.meta.emoji} {c.meta.label}</span>
+                    <span className="flex-1 truncate flex items-center gap-2"><c.meta.Icon className="size-3.5 shrink-0 text-foreground/60" /> {c.meta.label}</span>
                     <span className="font-mono text-foreground/60">{pct.toFixed(0)}%</span>
                   </div>
                 );

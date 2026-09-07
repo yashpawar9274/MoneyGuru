@@ -564,7 +564,7 @@ export function whatsappReminder(d: Debt, appLink: string) {
   const interest = (d.interestRate ?? 0) > 0 ? interestAccrued(d) : 0;
 
   const lines = [
-    `Hi ${d.title}! 👋`,
+    `Hi ${d.title}!`,
     "",
     `Chhota reminder: ₹${d.principal.toLocaleString("en-IN")} udhaar${d.reason ? ` (${d.reason})` : ""} lia tha.`,
   ];
@@ -573,7 +573,7 @@ export function whatsappReminder(d: Debt, appLink: string) {
   }
   lines.push(`Pending amount: ₹${left.toLocaleString("en-IN")}`);
   if (due) lines.push(`Due date: ${due}`);
-  lines.push("", "Jab possible ho settle kar dena 🙏", "", `Tracked on MONEY.FYI — ${appLink}`);
+  lines.push("", "Jab possible ho settle kar dena.", "", `Tracked on MONEY.FYI — ${appLink}`);
 
   return lines.join("\n");
 }

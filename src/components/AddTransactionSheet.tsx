@@ -94,7 +94,7 @@ export function AddTransactionSheet({ open, onClose }: { open: boolean; onClose:
                         : "bg-secondary border-transparent text-foreground/70"
                     }`}
                   >
-                    <span className="text-xl">{c.emoji}</span>
+                    <c.Icon className="size-5" />
                     <span className="text-[9px] font-semibold text-center leading-tight">{c.label.split(" ")[0]}</span>
                   </button>
                 ))}

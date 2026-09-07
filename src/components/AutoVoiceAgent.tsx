@@ -51,7 +51,7 @@ export function AutoVoiceAgent() {
             lang: spokenLang,
           },
         });
-        toast(line, { icon: "🔊" });
+        toast(line);
         await speakLine(line, spokenLang);
       } catch {
         /* stay silent on failure */

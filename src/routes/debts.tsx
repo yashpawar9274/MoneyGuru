@@ -24,10 +24,10 @@ export const Route = createFileRoute("/debts")({
   component: DebtsPage,
 });
 
-const KIND_META: Record<DebtKind, { label: string; emoji: string; tint: string; Icon: typeof HandCoins }> = {
-  udhari_given: { label: "Udhari Given", emoji: "🤝", tint: "text-success", Icon: HandCoins },
-  udhari_taken: { label: "Udhari Taken", emoji: "💸", tint: "text-danger", Icon: Wallet },
-  emi: { label: "EMI", emoji: "📅", tint: "text-accent", Icon: CreditCard },
+const KIND_META: Record<DebtKind, { label: string; tint: string; Icon: typeof HandCoins }> = {
+  udhari_given: { label: "Udhari Given", tint: "text-success", Icon: HandCoins },
+  udhari_taken: { label: "Udhari Taken", tint: "text-danger", Icon: Wallet },
+  emi: { label: "EMI", tint: "text-accent", Icon: CreditCard },
 };
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
@@ -142,7 +142,7 @@ function DebtsPage() {
       if (du === null || du > 3 || du < 0) continue;
       if (sent[d.id] === today) continue;
       const msg = du === 0 ? `${d.title} is due today` : `${d.title} due in ${du} day${du === 1 ? "" : "s"}`;
-      toast(msg, { icon: "🔔", duration: 6000 });
+      toast(msg, { duration: 6000 });
       if ("Notification" in window && Notification.permission === "granted") {
         try { new Notification("Payment reminder", { body: msg, icon: "/icon-512.png" }); } catch {}
       }
@@ -341,7 +341,7 @@ function DebtsPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-10 bg-secondary rounded-xl grid place-items-center text-xl">{meta.emoji}</div>
+                  <div className={`size-10 bg-secondary rounded-xl grid place-items-center ${meta.tint}`}><meta.Icon className="size-5" /></div>
                   <div className="min-w-0">
                     <p className="font-semibold text-sm truncate">{d.title}</p>
                     <p className={`text-[10px] uppercase tracking-widest font-bold ${meta.tint}`}>{meta.label}</p>
@@ -638,7 +638,7 @@ function AddDebtSheet({
                       kind === k ? "bg-neon/10 border-neon" : "bg-secondary border-transparent"
                     }`}
                   >
-                    <div className="text-xl">{m.emoji}</div>
+                    <m.Icon className="size-5" />
                     <div className="text-[9px] font-bold mt-1 leading-tight">{m.label}</div>
                   </button>
                 );

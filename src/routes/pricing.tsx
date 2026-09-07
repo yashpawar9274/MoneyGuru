@@ -92,7 +92,7 @@ function Pricing() {
           const r = await confirm({ data: { orderId } });
           if (r.status === "paid") {
             await refresh();
-            toast.success(r.plan === "lifetime" ? "Lifetime unlocked 🎉" : "Pro activated — 30 days added 🎉");
+            toast.success(r.plan === "lifetime" ? "Lifetime unlocked" : "Pro activated — 30 days added");
             window.history.replaceState({}, "", "/pricing");
             setVerifying(false);
             return;
