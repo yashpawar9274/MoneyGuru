@@ -55,8 +55,6 @@ export function GeminiLiveAssistant() {
   const nextPlayback = useRef(0);
 
   useEffect(() => () => stop(), []);
-  if (!isPro) return null;
-
   const playPcm = (data: string) => {
     const context = audioContext.current;
     if (!context) return;
@@ -127,7 +125,14 @@ export function GeminiLiveAssistant() {
   };
 
   return <>
-    <button onClick={() => setOpen(true)} className="fixed bottom-24 right-4 z-40 grid size-14 place-items-center rounded-full bg-neon text-neon-foreground shadow-neon" aria-label="Open Gemini Live assistant"><Sparkles className="size-6" /></button>
+    <button
+      onClick={() => { if (isPro) setOpen(true); else window.location.href = "/pricing"; }}
+      className="fixed bottom-24 right-4 z-40 grid size-14 place-items-center rounded-full bg-neon text-neon-foreground shadow-neon"
+      aria-label={isPro ? "Open Gemini Live assistant" : "Unlock Gemini Live assistant"}
+      title={isPro ? "Gemini Live" : "Unlock Gemini Live with Pro"}
+    >
+      <Sparkles className="size-6" />
+    </button>
     {open && <div className="fixed inset-0 z-[110] bg-black/80 p-5 backdrop-blur-sm"><section className="mx-auto mt-16 max-w-[440px] rounded-3xl border border-neon/30 bg-card p-5"><div className="flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-widest text-neon">Pro · Gemini Live</p><h2 className="mt-1 text-xl font-display font-bold">Talk to your money assistant</h2></div><button onClick={() => { stop(); setOpen(false); }} aria-label="Close assistant" className="grid size-9 place-items-center rounded-full bg-secondary"><X className="size-4" /></button></div><p className="mt-2 text-xs text-foreground/60">Speak naturally in Hindi or English. Actions appear for confirmation before saving.</p><div className="mt-5 min-h-32 rounded-2xl bg-secondary p-3 text-sm whitespace-pre-wrap">{transcript || status}</div>{pending && <div className="mt-3 rounded-2xl border border-neon/30 bg-neon/10 p-3 text-sm"><p className="font-bold">Save this {pending.type}?</p><p className="mt-1">₹{pending.amount.toLocaleString("en-IN")} · {pending.category}</p><div className="mt-3 flex gap-2"><button onClick={() => void confirm()} className="flex-1 rounded-xl bg-neon py-2 text-xs font-bold text-neon-foreground"><Check className="mr-1 inline size-3" /> Confirm</button><button onClick={() => setPending(null)} className="flex-1 rounded-xl bg-secondary py-2 text-xs font-bold">Cancel</button></div></div>}<button onClick={() => connected ? stop() : void start()} className={`mt-4 w-full rounded-2xl py-4 text-sm font-bold ${connected ? "bg-danger text-white" : "bg-neon text-neon-foreground"}`}>{connected ? <><PhoneOff className="mr-2 inline size-4" /> Stop listening</> : <><Mic className="mr-2 inline size-4" /> Start live talk</>}</button></section></div>}
   </>;
 }
