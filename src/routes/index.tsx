@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Bell, TrendingUp, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Bell, TrendingUp, ArrowDownRight, ArrowUpRight, HandCoins } from "lucide-react";
 import { motion } from "framer-motion";
 import { groupByDay, inRange, totals, useStore } from "@/lib/store";
 import { categoryMeta } from "@/lib/types";
