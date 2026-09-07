@@ -96,7 +96,7 @@ async function shareStatement(debt: Debt, items: LedgerItem[]) {
   }
 }
 
-function EntryForm({ debt, item, onClose }: { debt: Debt; item?: LedgerItem; onClose: () => void }) {
+export function EntryForm({ debt, item, onClose }: { debt: Debt; item?: LedgerItem; onClose: () => void }) {
   const { addEntry, addPayment, updateEntry, updatePayment } = useDebts();
   const initial = dateParts(item?.date ?? new Date().toISOString());
   const [amount, setAmount] = useState(item ? String(item.amount) : "");
