@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      bill_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          item_id: string
+          paid_at: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          item_id: string
+          paid_at?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          item_id?: string
+          paid_at?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_payments_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budgets: {
         Row: {
           category: string
@@ -189,6 +237,41 @@ export type Database = {
         }
         Relationships: []
       }
+      goal_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          goal_id: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          goal_id: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          goal_id?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_contributions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           created_at: string
@@ -363,31 +446,40 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          attachment_path: string | null
           category: string
           created_at: string
           date: string
           id: string
+          method: string | null
           note: string | null
+          source: string
           type: string
           user_id: string
         }
         Insert: {
           amount: number
+          attachment_path?: string | null
           category?: string
           created_at?: string
           date?: string
           id?: string
+          method?: string | null
           note?: string | null
+          source?: string
           type: string
           user_id?: string
         }
         Update: {
           amount?: number
+          attachment_path?: string | null
           category?: string
           created_at?: string
           date?: string
           id?: string
+          method?: string | null
           note?: string | null
+          source?: string
           type?: string
           user_id?: string
         }
@@ -410,6 +502,42 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          currency: string
+          fixed_expenses: number | null
+          monthly_budget: number | null
+          monthly_income: number | null
+          savings_target: number | null
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          fixed_expenses?: number | null
+          monthly_budget?: number | null
+          monthly_income?: number | null
+          savings_target?: number | null
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          fixed_expenses?: number | null
+          monthly_budget?: number | null
+          monthly_income?: number | null
+          savings_target?: number | null
+          theme?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
