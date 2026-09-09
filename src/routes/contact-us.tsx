@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router"; import { H, LegalPage } from "@/components/LegalPage";
+export const Route=createFileRoute("/contact-us")({head:()=>({meta:[{title:"Contact Us — MoneyGuruAI"}]}),component:Page});
+function Page(){return <LegalPage title="Contact Us" intro="For account, payment, privacy or product support, contact MoneyGuruAI using the details below."><section><H>Support</H><p>Email: theyashpawar92@gmail.com<br/>Phone: +91 73850 66631<br/>Country: India</p></section><section><H>KYC address notice</H><p>The exact registered address from the merchant's KYC/Aadhaar document must be added here before payment-gateway verification. It has intentionally not been guessed or fabricated.</p></section></LegalPage>}
