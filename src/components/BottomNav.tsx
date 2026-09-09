@@ -1,48 +1,42 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, BarChart3, Brain, Settings, Plus, Calculator } from "lucide-react";
+import { Brain, HandCoins, Home, Plus, ReceiptText } from "lucide-react";
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 
-export function BottomNav({
-  onAdd,
-  onCalculator,
-}: {
-  onAdd: () => void;
-  onCalculator: () => void;
-}) {
+export function BottomNav({ onAdd }: { onAdd: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const item = (to: string, Icon: typeof Home) => {
-    const active = path === to;
+
+  const item = (to: string, Icon: LucideIcon, label: string) => {
+    const active = to === "/" ? path === "/" : path.startsWith(to);
     return (
-      <Link to={to} className="size-10 flex items-center justify-center">
-        <Icon
-          className={`size-5 transition-colors ${active ? "text-neon" : "text-foreground/40"}`}
-        />
+      <Link
+        to={to}
+        aria-label={label}
+        className="flex w-14 flex-col items-center gap-1 py-1"
+      >
+        <Icon className={`size-5 transition-colors ${active ? "text-neon" : "text-foreground/40"}`} />
+        <span className={`text-[9px] font-bold uppercase tracking-wider ${active ? "text-neon" : "text-foreground/35"}`}>
+          {label}
+        </span>
       </Link>
     );
   };
+
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] px-4 pb-4 pt-2 bg-background/85 backdrop-blur-xl border-t border-border z-40">
-      <div className="flex justify-between items-center max-w-xs mx-auto">
-        {item("/", Home)}
-        {item("/analytics", BarChart3)}
+    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[440px] -translate-x-1/2 border-t border-border bg-background/85 px-4 pb-4 pt-2 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-sm items-center justify-between">
+        {item("/", Home, "Home")}
+        {item("/transactions", ReceiptText, "Money")}
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={onAdd}
-          className="size-14 bg-neon rounded-full -mt-10 border-4 border-background flex items-center justify-center neon-glow"
-          aria-label="Add transaction"
+          className="-mt-10 flex size-14 items-center justify-center rounded-full border-4 border-background bg-neon neon-glow"
+          aria-label="Quick add"
         >
           <Plus className="size-6 text-neon-foreground" strokeWidth={3} />
         </motion.button>
-        {item("/ai", Brain)}
-        {item("/settings", Settings)}
-        <button
-          onClick={onCalculator}
-          className="size-10 flex items-center justify-center rounded-xl border border-neon/40 bg-secondary text-neon shadow-[0_0_14px_hsl(var(--neon)/0.18)] transition-colors hover:bg-neon/10"
-          aria-label="Open calculator"
-          title="Open calculator"
-        >
-          <Calculator className="size-5" />
-        </button>
+        {item("/debts", HandCoins, "Udhari")}
+        {item("/ai", Brain, "Guru")}
       </div>
     </nav>
   );
