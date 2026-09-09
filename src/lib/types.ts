@@ -54,6 +54,15 @@ export type Category =
   | "loan"
   | "other";
 
+export type PaymentMethod = "cash" | "upi" | "card" | "bank";
+
+export const PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
+  { id: "cash", label: "Cash" },
+  { id: "upi", label: "UPI" },
+  { id: "card", label: "Card" },
+  { id: "bank", label: "Bank" },
+];
+
 export interface Transaction {
   id: string;
   type: TxType;
@@ -61,8 +70,10 @@ export interface Transaction {
   category: Category;
   note: string;
   date: string;
-  source?: "manual" | "scan";
+  method?: PaymentMethod | null;
+  source?: "manual" | "scan" | "voice" | "import";
 }
+
 
 export const CATEGORIES: {
   id: Category;
