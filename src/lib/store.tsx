@@ -139,9 +139,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const value = useMemo(
-    () => ({ transactions, loading, addTransaction, removeTransaction, clearAll }),
-    [transactions, loading, addTransaction, removeTransaction, clearAll],
+    () => ({ transactions, loading, addTransaction, updateTransaction, removeTransaction, clearAll }),
+    [transactions, loading, addTransaction, updateTransaction, removeTransaction, clearAll],
   );
+
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
