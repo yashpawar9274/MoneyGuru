@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AIAdvisorCard } from "@/components/AIAdvisorCard";
+import { LiveVoiceChat } from "@/components/LiveVoiceChat";
 import { useStore, inRange, totals } from "@/lib/store";
 import { useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
