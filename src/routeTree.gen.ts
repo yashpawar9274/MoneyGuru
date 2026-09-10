@@ -28,6 +28,7 @@ import { Route as AboutUsRouteImport } from './routes/about-us'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
+import { Route as ApiPublicPayuWebhookRouteImport } from './routes/api/public/payu-webhook'
 import { Route as ApiPublicPayuReturnRouteImport } from './routes/api/public/payu-return'
 import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -129,6 +130,11 @@ const ApiScanBillRoute = ApiScanBillRouteImport.update({
   path: '/api/scan-bill',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPayuWebhookRoute = ApiPublicPayuWebhookRouteImport.update({
+  id: '/api/public/payu-webhook',
+  path: '/api/public/payu-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPayuReturnRoute = ApiPublicPayuReturnRouteImport.update({
   id: '/api/public/payu-return',
   path: '/api/public/payu-return',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
   '/api/public/payu-return': typeof ApiPublicPayuReturnRoute
+  '/api/public/payu-webhook': typeof ApiPublicPayuWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
   '/api/public/payu-return': typeof ApiPublicPayuReturnRoute
+  '/api/public/payu-webhook': typeof ApiPublicPayuWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
   '/api/public/payu-return': typeof ApiPublicPayuReturnRoute
+  '/api/public/payu-webhook': typeof ApiPublicPayuWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/api/public/ai-advice'
     | '/api/public/payu-return'
+    | '/api/public/payu-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/api/public/ai-advice'
     | '/api/public/payu-return'
+    | '/api/public/payu-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/api/public/ai-advice'
     | '/api/public/payu-return'
+    | '/api/public/payu-webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -326,6 +338,7 @@ export interface RootRouteChildren {
   ApiTtsRoute: typeof ApiTtsRoute
   ApiPublicAiAdviceRoute: typeof ApiPublicAiAdviceRoute
   ApiPublicPayuReturnRoute: typeof ApiPublicPayuReturnRoute
+  ApiPublicPayuWebhookRoute: typeof ApiPublicPayuWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiScanBillRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payu-webhook': {
+      id: '/api/public/payu-webhook'
+      path: '/api/public/payu-webhook'
+      fullPath: '/api/public/payu-webhook'
+      preLoaderRoute: typeof ApiPublicPayuWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payu-return': {
       id: '/api/public/payu-return'
       path: '/api/public/payu-return'
@@ -518,6 +538,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTtsRoute: ApiTtsRoute,
   ApiPublicAiAdviceRoute: ApiPublicAiAdviceRoute,
   ApiPublicPayuReturnRoute: ApiPublicPayuReturnRoute,
+  ApiPublicPayuWebhookRoute: ApiPublicPayuWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
