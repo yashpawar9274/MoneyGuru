@@ -29,7 +29,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
 import { Route as ApiPublicPayuReturnRouteImport } from './routes/api/public/payu-return'
-import { Route as ApiPublicCashfreeWebhookRouteImport } from './routes/api/public/cashfree-webhook'
 import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -135,12 +134,6 @@ const ApiPublicPayuReturnRoute = ApiPublicPayuReturnRouteImport.update({
   path: '/api/public/payu-return',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicCashfreeWebhookRoute =
-  ApiPublicCashfreeWebhookRouteImport.update({
-    id: '/api/public/cashfree-webhook',
-    path: '/api/public/cashfree-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
   id: '/api/public/ai-advice',
   path: '/api/public/ai-advice',
@@ -178,7 +171,6 @@ export interface FileRoutesByFullPath {
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
-  '/api/public/cashfree-webhook': typeof ApiPublicCashfreeWebhookRoute
   '/api/public/payu-return': typeof ApiPublicPayuReturnRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -204,7 +196,6 @@ export interface FileRoutesByTo {
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
-  '/api/public/cashfree-webhook': typeof ApiPublicCashfreeWebhookRoute
   '/api/public/payu-return': typeof ApiPublicPayuReturnRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -231,7 +222,6 @@ export interface FileRoutesById {
   '/api/scan-bill': typeof ApiScanBillRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/public/ai-advice': typeof ApiPublicAiAdviceRoute
-  '/api/public/cashfree-webhook': typeof ApiPublicCashfreeWebhookRoute
   '/api/public/payu-return': typeof ApiPublicPayuReturnRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -259,7 +249,6 @@ export interface FileRouteTypes {
     | '/api/scan-bill'
     | '/api/tts'
     | '/api/public/ai-advice'
-    | '/api/public/cashfree-webhook'
     | '/api/public/payu-return'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -285,7 +274,6 @@ export interface FileRouteTypes {
     | '/api/scan-bill'
     | '/api/tts'
     | '/api/public/ai-advice'
-    | '/api/public/cashfree-webhook'
     | '/api/public/payu-return'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -311,7 +299,6 @@ export interface FileRouteTypes {
     | '/api/scan-bill'
     | '/api/tts'
     | '/api/public/ai-advice'
-    | '/api/public/cashfree-webhook'
     | '/api/public/payu-return'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -338,7 +325,6 @@ export interface RootRouteChildren {
   ApiScanBillRoute: typeof ApiScanBillRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ApiPublicAiAdviceRoute: typeof ApiPublicAiAdviceRoute
-  ApiPublicCashfreeWebhookRoute: typeof ApiPublicCashfreeWebhookRoute
   ApiPublicPayuReturnRoute: typeof ApiPublicPayuReturnRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -486,13 +472,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPayuReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/cashfree-webhook': {
-      id: '/api/public/cashfree-webhook'
-      path: '/api/public/cashfree-webhook'
-      fullPath: '/api/public/cashfree-webhook'
-      preLoaderRoute: typeof ApiPublicCashfreeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/ai-advice': {
       id: '/api/public/ai-advice'
       path: '/api/public/ai-advice'
@@ -538,7 +517,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiScanBillRoute: ApiScanBillRoute,
   ApiTtsRoute: ApiTtsRoute,
   ApiPublicAiAdviceRoute: ApiPublicAiAdviceRoute,
-  ApiPublicCashfreeWebhookRoute: ApiPublicCashfreeWebhookRoute,
   ApiPublicPayuReturnRoute: ApiPublicPayuReturnRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
