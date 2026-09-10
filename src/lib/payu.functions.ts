@@ -60,30 +60,9 @@ export const confirmPayUCheckout = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { key, salt, env } = payuCreds();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin.from("payments").select("user_id,plan,status,amount_inr,provider").eq("order_id", data.txnid).maybeSingle();
     if (!row || row.user_id !== context.userId || row.provider !== "payu") return { status: "unknown" as const };
-    if (row.status === "paid") return { status: "paid" as const, plan: row.plan as PaidPlan };
-
-    const command = "verify_payment";
-    const body = new URLSearchParams({ key, command, var1: data.txnid, hash: sha512(`${key}|${command}|${data.txnid}|${salt}`) });
-    const url = env === "production" ? "https://info.payu.in/merchant/postservice.php?form=2" : "https://test.payu.in/merchant/postservice.php?form=2";
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body });
-    const payload = await res.json().catch(() => ({}));
-    const tx = payload?.transaction_details?.[data.txnid];
-    if (!res.ok || !tx) return { status: "pending" as const };
-
-    const paid = String(tx.status || "").toLowerCase() === "success";
-    const amountMatches = Number(tx.amt ?? tx.amount) === Number(row.amount_inr);
-    if (paid && amountMatches) {
-      const { error } = await supabaseAdmin.rpc("apply_paid_order", { p_order_id: data.txnid });
-      if (error) throw new Error(error.message);
-      return { status: "paid" as const, plan: row.plan as PaidPlan };
-    }
-    if (["failure", "failed"].includes(String(tx.status || "").toLowerCase())) {
-      await supabaseAdmin.from("payments").update({ status: "failed" }).eq("order_id", data.txnid);
-      return { status: "failed" as const };
-    }
-    return { status: "pending" as const };
+    const { verifyAndApplyPayUOrder } = await import("@/lib/payu.server");
+    return verifyAndApplyPayUOrder(data.txnid);
   });

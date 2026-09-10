@@ -8,6 +8,14 @@ async function redirectFromPayU(request: Request) {
   } else {
     txnid = new URL(request.url).searchParams.get("txnid") || "";
   }
+  if (txnid) {
+    try {
+      const { verifyAndApplyPayUOrder } = await import("@/lib/payu.server");
+      await verifyAndApplyPayUOrder(txnid);
+    } catch (error) {
+      console.error("PayU return fulfilment failed", error);
+    }
+  }
   const origin = new URL(request.url).origin;
   const target = new URL("/pricing", origin);
   if (txnid) target.searchParams.set("payu_txnid", txnid);
