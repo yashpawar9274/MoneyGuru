@@ -5,7 +5,7 @@ export const RELEASE_NOTES = [
   "Receipt totals now use the complete ledger, with PDF download and WhatsApp sharing.",
   "Profile cards show the saved photo and transaction edit/delete actions are available.",
   "Installable PWA support with a service worker for mobile browser installation.",
-  "Cashfree webhook callbacks are stored for reliable payment tracking.",
+  "PayU checkout with live UPI, card and netbanking payments.",
 ];
 
 export const MOBILE_DOWNLOAD_URL = "https://moneyguruai.dev";

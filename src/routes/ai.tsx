@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AIAdvisorCard } from "@/components/AIAdvisorCard";
+import { LiveVoiceChat } from "@/components/LiveVoiceChat";
 import { useStore, inRange, totals } from "@/lib/store";
 import { useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
@@ -30,6 +31,10 @@ function AIPage() {
       </header>
 
       <AIAdvisorCard />
+
+      <div className="mt-4">
+        <LiveVoiceChat />
+      </div>
 
       <div className="grid grid-cols-2 gap-3 mt-5">
         <div className="bg-card rounded-2xl p-4">

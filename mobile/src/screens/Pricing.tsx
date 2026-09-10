@@ -97,7 +97,7 @@ export default function PricingScreen() {
       ))}
 
       <Text style={styles.note}>
-        Payment secure Cashfree checkout par hota hai (UPI, card, netbanking). Payment complete
+        Payment secure PayU checkout par hota hai (UPI, card, netbanking). Payment complete
         hone ke baad neeche tap karke plan sync karein.
       </Text>
 
