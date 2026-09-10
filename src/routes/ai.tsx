@@ -31,6 +31,10 @@ function AIPage() {
 
       <AIAdvisorCard />
 
+      <div className="mt-4">
+        <LiveVoiceChat />
+      </div>
+
       <div className="grid grid-cols-2 gap-3 mt-5">
         <div className="bg-card rounded-2xl p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">7-day spend</p>
