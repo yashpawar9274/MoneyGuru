@@ -6,6 +6,9 @@ const BUCKET = "debt-proofs";
 
 /** Uploads a payment screenshot into the signed-in user's private folder. */
 export async function uploadProof(file: File, userId: string) {
+  const allowed = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+  if (!allowed.has(file.type)) throw new Error("Proof must be JPG, PNG, WebP or PDF.");
+  if (file.size > 8 * 1024 * 1024) throw new Error("Proof must be smaller than 8 MB.");
   const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
@@ -143,8 +146,12 @@ export function parseNotification(raw: string): {
   const direction: "debit" | "credit" = creditWords.test(text) ? "credit" : "debit";
 
   const nameMatch =
-    text.match(/\b(?:paid to|sent to|to)\s+([A-Za-z][A-Za-z .'-]{1,30}?)(?=\s+(?:on|at|via|using|from|ref|upi|₹|rs\b|\d)|[.,]|$)/i) ??
-    text.match(/\b(?:from|by|received from)\s+([A-Za-z][A-Za-z .'-]{1,30}?)(?=\s+(?:on|at|via|using|ref|upi|₹|rs\b|\d)|[.,]|$)/i);
+    text.match(
+      /\b(?:paid to|sent to|to)\s+([A-Za-z][A-Za-z .'-]{1,30}?)(?=\s+(?:on|at|via|using|from|ref|upi|₹|rs\b|\d)|[.,]|$)/i,
+    ) ??
+    text.match(
+      /\b(?:from|by|received from)\s+([A-Za-z][A-Za-z .'-]{1,30}?)(?=\s+(?:on|at|via|using|ref|upi|₹|rs\b|\d)|[.,]|$)/i,
+    );
   const name = nameMatch?.[1]?.trim().replace(/\s+(?:upi|bank|account)$/i, "");
 
   // Optional explicit time like "at 6:12 PM" or "18:12"

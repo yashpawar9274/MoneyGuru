@@ -1,80 +1,226 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Activity, CreditCard, Database, Loader2, ShieldAlert, Users } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { Activity, CreditCard, Loader2, RefreshCw, ShieldAlert, Users } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getAdminDashboard,
+  unlockCustomerPro,
+  type AdminDashboardData,
+} from "@/lib/admin.functions";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/admin")({ component: AdminPage });
+export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [
+      { title: "Admin Dashboard — MONEY.FYI" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
+  component: AdminPage,
+});
 
-type Row = Record<string, unknown>;
-type Feed = { customers: Row[]; payments: Row[]; webhooks: Row[]; debts: Row[] };
-
-const emptyFeed: Feed = { customers: [], payments: [], webhooks: [], debts: [] };
+const emptyData: AdminDashboardData = {
+  customers: [],
+  payments: [],
+  subscriptions: [],
+  webhooks: [],
+};
 
 function AdminPage() {
   const { user } = useAuth();
-  const [allowed, setAllowed] = useState<boolean | null>(null);
-  const [feed, setFeed] = useState<Feed>(emptyFeed);
+  const fetchDashboard = useServerFn(getAdminDashboard);
+  const unlock = useServerFn(unlockCustomerPro);
+  const [data, setData] = useState(emptyData);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [unlocking, setUnlocking] = useState("");
+
+  const load = useCallback(async () => {
+    if (!user) return;
+    try {
+      setError("");
+      setData(await fetchDashboard());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Admin access required");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchDashboard, user]);
 
   useEffect(() => {
-    if (!user) return;
-    let active = true;
-    const load = async () => {
-      const { data, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!active) return;
-      if (roleError) { setError(roleError.message); setAllowed(false); return; }
-      setAllowed(Boolean(data));
-      if (!data) return;
-      const [customers, payments, webhooks, debts] = await Promise.all([
-        supabase.from("profiles").select("id,email,full_name,updated_at").order("updated_at", { ascending: false }).limit(100),
-        supabase.from("payments").select("id,user_id,order_id,amount_inr,plan,status,created_at,updated_at").order("created_at", { ascending: false }).limit(100),
-        supabase.from("webhook_logs").select("id,event_type,order_id,status,http_status,signature_valid,message,created_at").order("created_at", { ascending: false }).limit(100),
-        supabase.from("debts").select("id,user_id,title,kind,principal,created_at").order("created_at", { ascending: false }).limit(100),
-      ]);
-      if (!active) return;
-      const firstError = customers.error || payments.error || webhooks.error || debts.error;
-      if (firstError) setError(firstError.message);
-      setFeed({ customers: (customers.data ?? []) as Row[], payments: (payments.data ?? []) as Row[], webhooks: (webhooks.data ?? []) as Row[], debts: (debts.data ?? []) as Row[] });
-    };
     void load();
+    if (!user) return;
     const channel = supabase
-      .channel("admin-live-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => void load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => void load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "webhook_logs" }, () => void load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "debts" }, () => void load())
+      .channel(`admin-refresh-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "webhook_logs" }, load)
       .subscribe();
-    return () => { active = false; void supabase.removeChannel(channel); };
-  }, [user]);
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [load, user]);
 
-  if (allowed === null) return <main className="grid min-h-screen place-items-center"><Loader2 className="animate-spin text-neon" /></main>;
-  if (!allowed) return <main className="mx-auto min-h-screen max-w-[440px] px-5 py-12"><ShieldAlert className="size-8 text-danger" /><h1 className="mt-4 text-2xl font-display font-bold">Admin access required</h1><p className="mt-2 text-sm text-foreground/60">{error || "This account is not an administrator."}</p></main>;
+  const grant = async (userId: string, plan: "pro" | "lifetime") => {
+    setUnlocking(`${userId}:${plan}`);
+    try {
+      const result = await unlock({ data: { userId, plan } });
+      toast.success(`${result.email ?? "Customer"} unlocked as ${plan}`);
+      await load();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Unlock failed");
+    } finally {
+      setUnlocking("");
+    }
+  };
+
+  if (loading)
+    return (
+      <main className="grid min-h-screen place-items-center">
+        <Loader2 className="size-6 animate-spin text-neon" />
+      </main>
+    );
+  if (error)
+    return (
+      <main className="mx-auto min-h-screen max-w-[440px] px-5 py-12">
+        <ShieldAlert className="size-8 text-danger" />
+        <h1 className="mt-4 text-2xl font-display font-bold">Admin access required</h1>
+        <p className="mt-2 text-sm text-foreground/60">{error}</p>
+      </main>
+    );
 
   const stats = [
-    ["Customers", feed.customers.length, Users],
-    ["Payments", feed.payments.length, CreditCard],
-    ["Webhook callbacks", feed.webhooks.length, Activity],
-    ["Debts", feed.debts.length, Database],
+    ["Customers", data.customers.length, Users],
+    ["Payments", data.payments.length, CreditCard],
+    ["Subscriptions", data.subscriptions.length, RefreshCw],
+    ["Webhook logs", data.webhooks.length, Activity],
   ] as const;
-  return <main className="mx-auto min-h-screen max-w-[900px] px-5 py-8 pb-16">
-    <header><p className="text-[10px] font-bold uppercase tracking-widest text-neon">Operations</p><h1 className="mt-1 text-3xl font-display font-bold">Admin dashboard</h1><p className="mt-2 text-sm text-foreground/60">Live customer, payment, webhook and debt feeds.</p></header>
-    <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">{stats.map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-border bg-card p-4"><Icon className="size-5 text-neon" /><p className="mt-4 text-2xl font-bold">{value}</p><p className="text-xs text-foreground/50">{label}</p></div>)}</div>
-    {error && <p className="mt-4 rounded-xl bg-danger/10 p-3 text-xs text-danger">{error}</p>}
-    <section className="mt-6 grid gap-4 md:grid-cols-2">
-      <Feed title="Recent payments" rows={feed.payments} fields={["order_id", "plan", "amount", "status"]} />
-      <Feed title="Webhook logs" rows={feed.webhooks} fields={["event_type", "order_id", "status", "http_status"]} />
-      <Feed title="Customers" rows={feed.customers} fields={["full_name", "email"]} />
-      <Feed title="Debts" rows={feed.debts} fields={["title", "kind", "principal"]} />
-    </section>
-  </main>;
+  return (
+    <main className="mx-auto min-h-screen max-w-[1100px] px-5 py-8 pb-24">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-neon">
+            Secure operations
+          </p>
+          <h1 className="mt-1 text-3xl font-display font-bold">Admin dashboard</h1>
+          <p className="mt-2 text-sm text-foreground/60">
+            Live payments, subscriptions and callbacks.
+          </p>
+        </div>
+        <button
+          onClick={() => void load()}
+          className="rounded-xl bg-secondary p-3"
+          aria-label="Refresh dashboard"
+        >
+          <RefreshCw className="size-4" />
+        </button>
+      </header>
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {stats.map(([label, value, Icon]) => (
+          <div key={label} className="rounded-2xl border border-border bg-card p-4">
+            <Icon className="size-5 text-neon" />
+            <p className="mt-4 text-2xl font-bold">{value}</p>
+            <p className="text-xs text-foreground/50">{label}</p>
+          </div>
+        ))}
+      </div>
+      <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+        <h2 className="font-bold">Customers & direct Pro unlock</h2>
+        <div className="mt-3 space-y-2">
+          {data.customers.map((customer) => (
+            <article
+              key={customer.id}
+              className="flex flex-col gap-3 rounded-xl bg-secondary/60 p-3 md:flex-row md:items-center"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold">
+                  {customer.fullName || customer.email || "Customer"}
+                </p>
+                <p className="truncate text-xs text-foreground/50">{customer.email}</p>
+                <p className="mt-1 text-[10px] uppercase text-neon">
+                  {customer.plan} · {customer.subscriptionStatus}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  disabled={!!unlocking}
+                  onClick={() => void grant(customer.id, "pro")}
+                  className="rounded-lg bg-neon px-3 py-2 text-xs font-bold text-neon-foreground disabled:opacity-50"
+                >
+                  {unlocking === `${customer.id}:pro` ? "Unlocking…" : "Pro 30 days"}
+                </button>
+                <button
+                  disabled={!!unlocking}
+                  onClick={() => void grant(customer.id, "lifetime")}
+                  className="rounded-lg border border-neon/30 px-3 py-2 text-xs font-bold text-neon disabled:opacity-50"
+                >
+                  Lifetime
+                </button>
+              </div>
+            </article>
+          ))}
+          {data.customers.length === 0 ? (
+            <p className="text-xs text-foreground/50">No customers yet.</p>
+          ) : null}
+        </div>
+      </section>
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <Panel title="Recent payments">
+          {data.payments.map((payment) => (
+            <Row
+              key={payment.id}
+              title={payment.email || payment.orderId}
+              detail={`${payment.plan} · ₹${payment.amountInr} · ${payment.status}`}
+              meta={payment.orderId}
+            />
+          ))}
+        </Panel>
+        <Panel title="Subscriptions">
+          {data.subscriptions.map((subscription) => (
+            <Row
+              key={subscription.userId}
+              title={subscription.email || subscription.userId}
+              detail={`${subscription.plan} · ${subscription.status}`}
+              meta={
+                subscription.currentPeriodEnd
+                  ? new Date(subscription.currentPeriodEnd).toLocaleString("en-IN")
+                  : "No expiry"
+              }
+            />
+          ))}
+        </Panel>
+        <Panel title="Webhook & audit logs">
+          {data.webhooks.map((log) => (
+            <Row
+              key={log.id}
+              title={`${log.provider} · ${log.eventType || "callback"}`}
+              detail={`${log.status || "unknown"} · HTTP ${log.httpStatus ?? "-"} · signature ${log.signatureValid ? "valid" : "invalid"}`}
+              meta={log.message || log.orderId || new Date(log.createdAt).toLocaleString("en-IN")}
+            />
+          ))}
+        </Panel>
+      </div>
+    </main>
+  );
 }
 
-function Feed({ title, rows, fields }: { title: string; rows: Row[]; fields: string[] }) {
-  return <section className="rounded-2xl border border-border bg-card p-4"><h2 className="font-bold">{title}</h2><div className="mt-3 space-y-2">{rows.slice(0, 8).map((row, index) => <div key={String(row.id ?? index)} className="rounded-xl bg-secondary/60 p-3 text-xs">{fields.map((field) => <span key={field} className="mr-3 inline-block"><b className="text-foreground/50">{field}:</b> {String(row[field] ?? "-")}</span>)}</div>)}{rows.length === 0 && <p className="text-xs text-foreground/50">No records yet.</p>}</div></section>;
+function Panel({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4">
+      <h2 className="font-bold">{title}</h2>
+      <div className="mt-3 max-h-[500px] space-y-2 overflow-y-auto">{children}</div>
+    </section>
+  );
+}
+function Row({ title, detail, meta }: { title: string; detail: string; meta: string }) {
+  return (
+    <article className="rounded-xl bg-secondary/60 p-3 text-xs">
+      <p className="truncate font-bold">{title}</p>
+      <p className="mt-1 text-foreground/70">{detail}</p>
+      <p className="mt-1 break-all text-[10px] text-foreground/40">{meta}</p>
+    </article>
+  );
 }

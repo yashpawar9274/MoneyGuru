@@ -84,12 +84,12 @@ interface Ctx {
   ) => Promise<void>;
   updateEntry: (
     id: string,
-    patch: { amount: number; note?: string; givenAt?: string } & TxMeta,
+    patch: { amount: number; note?: string; proofPath?: string; givenAt?: string } & TxMeta,
   ) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
   updatePayment: (
     id: string,
-    patch: { amount: number; note?: string; paidAt?: string } & TxMeta,
+    patch: { amount: number; note?: string; proofPath?: string; paidAt?: string } & TxMeta,
   ) => Promise<void>;
   removePayment: (id: string) => Promise<void>;
   ensureReceipt: (debtId: string) => Promise<Pick<Debt, "receiptNumber" | "receiptCreatedAt">>;
@@ -172,8 +172,12 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
           "id,kind,title,principal,monthly,due_date,plan_amount,plan_freq,interest_rate,reason,contact_phone,receipt_number,receipt_created_at,created_at",
         )
         .order("created_at", { ascending: false }),
-      supabase.from("debt_payments").select("id,debt_id,amount,note,paid_at,proof_path,purpose,method,location"),
-      supabase.from("debt_entries").select("id,debt_id,amount,note,given_at,proof_path,purpose,method,location"),
+      supabase
+        .from("debt_payments")
+        .select("id,debt_id,amount,note,paid_at,proof_path,purpose,method,location"),
+      supabase
+        .from("debt_entries")
+        .select("id,debt_id,amount,note,given_at,proof_path,purpose,method,location"),
     ]);
     const byDebt = new Map<string, DebtPayment[]>();
     for (const p of (pays ?? []) as unknown as PaymentRow[]) {
@@ -207,28 +211,28 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
     }
     setDebts(
       ((rows ?? []) as unknown as DebtRow[]).map((r) => {
-      const rowEntries = entriesByDebt.get(r.id) ?? [];
-      // Source of truth = the ledger. The stored principal is only a fallback
-      // for legacy rows that have no entries yet, so totals can never drift.
-      const givenSum = rowEntries.reduce((sum, entry) => sum + entry.amount, 0);
-      return ({
-        id: r.id,
-        kind: r.kind as DebtKind,
-        title: r.title,
-        principal: rowEntries.length > 0 ? givenSum : Number(r.principal),
-        monthly: num(r.monthly),
-        dueDate: r.due_date ?? undefined,
-        planAmount: num(r.plan_amount),
-        planFreq: (r.plan_freq as PayFreq | null) ?? undefined,
-        interestRate: num(r.interest_rate) ?? 0,
-        reason: r.reason ?? undefined,
-        contactPhone: r.contact_phone ?? undefined,
-        receiptNumber: r.receipt_number ?? undefined,
-        receiptCreatedAt: r.receipt_created_at ?? undefined,
-        createdAt: r.created_at,
-        payments: (byDebt.get(r.id) ?? []).sort((a, b) => +new Date(b.date) - +new Date(a.date)),
-        entries: rowEntries.slice().sort((a, b) => +new Date(b.date) - +new Date(a.date)),
-      });
+        const rowEntries = entriesByDebt.get(r.id) ?? [];
+        // Source of truth = the ledger. The stored principal is only a fallback
+        // for legacy rows that have no entries yet, so totals can never drift.
+        const givenSum = rowEntries.reduce((sum, entry) => sum + entry.amount, 0);
+        return {
+          id: r.id,
+          kind: r.kind as DebtKind,
+          title: r.title,
+          principal: rowEntries.length > 0 ? givenSum : Number(r.principal),
+          monthly: num(r.monthly),
+          dueDate: r.due_date ?? undefined,
+          planAmount: num(r.plan_amount),
+          planFreq: (r.plan_freq as PayFreq | null) ?? undefined,
+          interestRate: num(r.interest_rate) ?? 0,
+          reason: r.reason ?? undefined,
+          contactPhone: r.contact_phone ?? undefined,
+          receiptNumber: r.receipt_number ?? undefined,
+          receiptCreatedAt: r.receipt_created_at ?? undefined,
+          createdAt: r.created_at,
+          payments: (byDebt.get(r.id) ?? []).sort((a, b) => +new Date(b.date) - +new Date(a.date)),
+          entries: rowEntries.slice().sort((a, b) => +new Date(b.date) - +new Date(a.date)),
+        };
       }),
     );
     setLoading(false);
@@ -340,62 +344,88 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
   );
 
   const updateEntry = useCallback(
-    async (id: string, patch: { amount: number; note?: string; givenAt?: string } & TxMeta) => {
-      const { error } = await supabase.from("debt_entries").update({
-        amount: patch.amount,
-        note: patch.note ?? null,
-        purpose: patch.purpose ?? null,
-        method: patch.method ?? null,
-        location: patch.location ?? null,
-        ...(patch.givenAt ? { given_at: patch.givenAt } : {}),
-      } as never).eq("id", id);
+    async (
+      id: string,
+      patch: { amount: number; note?: string; proofPath?: string; givenAt?: string } & TxMeta,
+    ) => {
+      const { error } = await supabase
+        .from("debt_entries")
+        .update({
+          amount: patch.amount,
+          note: patch.note ?? null,
+          proof_path: patch.proofPath ?? null,
+          purpose: patch.purpose ?? null,
+          method: patch.method ?? null,
+          location: patch.location ?? null,
+          ...(patch.givenAt ? { given_at: patch.givenAt } : {}),
+        } as never)
+        .eq("id", id);
       if (error) throw error;
       await fetchAll();
     },
     [fetchAll],
   );
 
-  const removeEntry = useCallback(async (id: string) => {
-    const { error } = await supabase.from("debt_entries").delete().eq("id", id);
-    if (error) throw error;
-    await fetchAll();
-  }, [fetchAll]);
+  const removeEntry = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from("debt_entries").delete().eq("id", id);
+      if (error) throw error;
+      await fetchAll();
+    },
+    [fetchAll],
+  );
 
-  const updatePayment = useCallback(async (id: string, patch: { amount: number; note?: string; paidAt?: string } & TxMeta) => {
-    const { error } = await supabase.from("debt_payments").update({
-      amount: patch.amount,
-      note: patch.note ?? null,
-      purpose: patch.purpose ?? null,
-      method: patch.method ?? null,
-      location: patch.location ?? null,
-      ...(patch.paidAt ? { paid_at: patch.paidAt } : {}),
-    } as never).eq("id", id);
-    if (error) throw error;
-    await fetchAll();
-  }, [fetchAll]);
+  const updatePayment = useCallback(
+    async (
+      id: string,
+      patch: { amount: number; note?: string; proofPath?: string; paidAt?: string } & TxMeta,
+    ) => {
+      const { error } = await supabase
+        .from("debt_payments")
+        .update({
+          amount: patch.amount,
+          note: patch.note ?? null,
+          proof_path: patch.proofPath ?? null,
+          purpose: patch.purpose ?? null,
+          method: patch.method ?? null,
+          location: patch.location ?? null,
+          ...(patch.paidAt ? { paid_at: patch.paidAt } : {}),
+        } as never)
+        .eq("id", id);
+      if (error) throw error;
+      await fetchAll();
+    },
+    [fetchAll],
+  );
 
-  const removePayment = useCallback(async (id: string) => {
-    const { error } = await supabase.from("debt_payments").delete().eq("id", id);
-    if (error) throw error;
-    await fetchAll();
-  }, [fetchAll]);
+  const removePayment = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from("debt_payments").delete().eq("id", id);
+      if (error) throw error;
+      await fetchAll();
+    },
+    [fetchAll],
+  );
 
-  const ensureReceipt = useCallback(async (debtId: string) => {
-    const current = debts.find((debt) => debt.id === debtId);
-    if (current?.receiptNumber) {
-      return { receiptNumber: current.receiptNumber, receiptCreatedAt: current.receiptCreatedAt };
-    }
-    const { data, error } = await supabase
-      .from("debts")
-      .update({ receipt_number: null } as never)
-      .eq("id", debtId)
-      .select("receipt_number,receipt_created_at")
-      .single();
-    if (error) throw error;
-    const result = data as unknown as { receipt_number: string; receipt_created_at: string };
-    await fetchAll();
-    return { receiptNumber: result.receipt_number, receiptCreatedAt: result.receipt_created_at };
-  }, [debts, fetchAll]);
+  const ensureReceipt = useCallback(
+    async (debtId: string) => {
+      const current = debts.find((debt) => debt.id === debtId);
+      if (current?.receiptNumber) {
+        return { receiptNumber: current.receiptNumber, receiptCreatedAt: current.receiptCreatedAt };
+      }
+      const { data, error } = await supabase
+        .from("debts")
+        .update({ receipt_number: null } as never)
+        .eq("id", debtId)
+        .select("receipt_number,receipt_created_at")
+        .single();
+      if (error) throw error;
+      const result = data as unknown as { receipt_number: string; receipt_created_at: string };
+      await fetchAll();
+      return { receiptNumber: result.receipt_number, receiptCreatedAt: result.receipt_created_at };
+    },
+    [debts, fetchAll],
+  );
 
   const findDebt = useCallback(
     (kind: DebtKind, title: string) =>
@@ -422,7 +452,22 @@ export function DebtsProvider({ children }: { children: ReactNode }) {
       findDebt,
       refresh: fetchAll,
     }),
-    [debts, loading, addDebt, updateDebt, removeDebt, addPayment, addEntry, updateEntry, removeEntry, updatePayment, removePayment, ensureReceipt, findDebt, fetchAll],
+    [
+      debts,
+      loading,
+      addDebt,
+      updateDebt,
+      removeDebt,
+      addPayment,
+      addEntry,
+      updateEntry,
+      removeEntry,
+      updatePayment,
+      removePayment,
+      ensureReceipt,
+      findDebt,
+      fetchAll,
+    ],
   );
   return <DebtsCtx.Provider value={value}>{children}</DebtsCtx.Provider>;
 }
@@ -553,7 +598,11 @@ export const KIND_LABEL: Record<DebtKind, string> = {
 export function whatsappReminder(d: Debt, appLink: string) {
   const left = remaining(d);
   const due = d.dueDate
-    ? new Date(d.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    ? new Date(d.dueDate).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
     : null;
   const interest = (d.interestRate ?? 0) > 0 ? interestAccrued(d) : 0;
 

@@ -83,7 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-
   useEffect(() => {
     const uid = session?.user.id;
     if (!uid) return;
@@ -109,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void supabase.removeChannel(channel);
     };
   }, [session?.user.id]);
-
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -161,10 +159,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const plan = subscription?.plan ?? "free";
   const expired =
-    plan === "pro" &&
+    (plan === "pro" || plan === "weekly") &&
     !!subscription?.current_period_end &&
     +new Date(subscription.current_period_end) < Date.now();
-  const isPro = plan === "lifetime" || (plan === "pro" && !expired);
+  const isPro = plan === "lifetime" || ((plan === "pro" || plan === "weekly") && !expired);
 
   const value = useMemo(
     () => ({
