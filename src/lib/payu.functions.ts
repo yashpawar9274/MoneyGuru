@@ -11,6 +11,11 @@ function payuCreds() {
   return { key, salt, env, action: env === "production" ? "https://secure.payu.in/_payment" : "https://test.payu.in/_payment" };
 }
 
+function productionOrigin(returnUrl: string, env: string) {
+  if (env !== "production") return returnUrl.replace(/\/$/, "");
+  return "https://moneyguruai.dev";
+}
+
 const sha512 = (value: string) => createHash("sha512").update(value).digest("hex");
 
 export const payuStatus = createServerFn({ method: "GET" }).handler(async () => {
@@ -36,7 +41,7 @@ export const createPayUCheckout = createServerFn({ method: "POST" })
     const firstname = (data.firstName || String(context.claims?.user_metadata?.full_name || "MoneyGuru User")).trim().slice(0, 60);
     const phone = (data.phone || "").replace(/\D/g, "").slice(-10) || "9999999999";
     const productinfo = data.plan === "lifetime" ? "MoneyGuruAI Lifetime" : "MoneyGuruAI Pro 30 Days";
-    const callback = `${data.returnUrl.replace(/\/$/, "")}/api/public/payu-return`;
+    const callback = `${productionOrigin(data.returnUrl, env)}/api/public/payu-return`;
     const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
     const hash = sha512(hashString);
 
@@ -71,11 +76,14 @@ export const confirmPayUCheckout = createServerFn({ method: "POST" })
     const url = env === "production" ? "https://info.payu.in/merchant/postservice.php?form=2" : "https://test.payu.in/merchant/postservice.php?form=2";
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body });
     const payload = await res.json().catch(() => ({}));
-    const tx = payload?.transaction_details?.[data.txnid];
+    const transactionDetails = payload && typeof payload === "object" && "transaction_details" in payload
+      ? (payload.transaction_details as Record<string, Record<string, unknown>> | undefined)
+      : undefined;
+    const tx = transactionDetails?.[data.txnid];
     if (!res.ok || !tx) return { status: "pending" as const };
 
-    const paid = String(tx.status || "").toLowerCase() === "success";
-    const amountMatches = Number(tx.amt ?? tx.amount) === Number(row.amount_inr);
+    const paid = ["success", "captured"].includes(String(tx.status || tx.unmappedstatus || "").toLowerCase());
+    const amountMatches = Math.abs(Number(tx.amt ?? tx.amount) - Number(row.amount_inr)) < 0.001;
     if (paid && amountMatches) {
       const { error } = await supabaseAdmin.rpc("apply_paid_order", { p_order_id: data.txnid });
       if (error) throw new Error(error.message);

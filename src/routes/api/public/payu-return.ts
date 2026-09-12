@@ -4,7 +4,11 @@ import { createHash } from "crypto";
 const sha512 = (value: string) => createHash("sha512").update(value).digest("hex");
 
 function redirectToPricing(request: Request, txnid: string, result?: string) {
-  const target = new URL("/pricing", new URL(request.url).origin);
+  const requestOrigin = new URL(request.url).origin;
+  const targetOrigin = process.env["PAYU_ENV"]?.trim().toLowerCase() === "production"
+    ? "https://moneyguruai.dev"
+    : requestOrigin;
+  const target = new URL("/pricing", targetOrigin);
   if (txnid) target.searchParams.set("payu_txnid", txnid);
   if (result) target.searchParams.set("payu_result", result);
   return Response.redirect(target.toString(), 303);
@@ -42,10 +46,15 @@ async function handlePayUReturn(request: Request) {
   let reverse = reverseParts.join("|");
   if (additionalCharges) reverse = `${additionalCharges}|${reverse}`;
   const validHash = sha512(reverse) === f("hash").toLowerCase();
-
-  if (!validHash) return redirectToPricing(request, txnid, "invalid_hash");
-
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (!validHash) {
+    await supabaseAdmin.from("webhook_logs").insert({
+      provider: "payu", event_type: "browser_return", order_id: txnid,
+      status, signature_valid: false, http_status: 401, message: "Invalid PayU return hash",
+    });
+    return redirectToPricing(request, txnid, "invalid_hash");
+  }
+
   const { data: payment, error: paymentError } = await supabaseAdmin
     .from("payments")
     .select("order_id,amount_inr,provider,status")
@@ -53,6 +62,10 @@ async function handlePayUReturn(request: Request) {
     .maybeSingle();
 
   if (paymentError || !payment || payment.provider !== "payu") {
+    await supabaseAdmin.from("webhook_logs").insert({
+      provider: "payu", event_type: "browser_return", order_id: txnid,
+      status, signature_valid: true, http_status: 404, message: "PayU order not found",
+    });
     return redirectToPricing(request, txnid, "order_not_found");
   }
 
@@ -61,16 +74,33 @@ async function handlePayUReturn(request: Request) {
     const { error } = await supabaseAdmin.rpc("apply_paid_order", { p_order_id: txnid });
     if (error) {
       console.error("PayU fulfilment failed:", error.message);
+      await supabaseAdmin.from("webhook_logs").insert({
+        provider: "payu", event_type: "browser_return", order_id: txnid,
+        status, signature_valid: true, http_status: 500, message: `Fulfilment failed: ${error.message}`.slice(0, 500),
+      });
       return redirectToPricing(request, txnid, "fulfilment_error");
     }
+    await supabaseAdmin.from("webhook_logs").insert({
+      provider: "payu", event_type: "browser_return", order_id: txnid,
+      status: "paid", signature_valid: true, http_status: 200, message: "Subscription activated",
+    });
     return redirectToPricing(request, txnid, "paid");
   }
 
   if (status === "failure" || status === "failed") {
     await supabaseAdmin.from("payments").update({ status: "failed" }).eq("order_id", txnid);
+    await supabaseAdmin.from("webhook_logs").insert({
+      provider: "payu", event_type: "browser_return", order_id: txnid,
+      status: "failed", signature_valid: true, http_status: 200, message: "Payment failed",
+    });
     return redirectToPricing(request, txnid, "failed");
   }
 
+  await supabaseAdmin.from("webhook_logs").insert({
+    provider: "payu", event_type: "browser_return", order_id: txnid,
+    status, signature_valid: true, http_status: 202,
+    message: amountMatches ? "Payment pending" : "Payment amount mismatch",
+  });
   return redirectToPricing(request, txnid, amountMatches ? "pending" : "amount_mismatch");
 }
 

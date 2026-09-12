@@ -12,6 +12,10 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({ meta: [
     { title: "Pricing — MoneyGuruAI Pro at ₹100/month" },
     { name: "description", content: "Upgrade MoneyGuruAI with secure PayU checkout. Pro ₹100/month or Lifetime ₹999." },
+    { property: "og:title", content: "MoneyGuruAI Pricing — Pro at ₹100/month" },
+    { property: "og:description", content: "Upgrade securely with PayU. Choose Pro for ₹100 per month or Lifetime access." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ]}),
   component: Pricing,
 });
@@ -32,10 +36,12 @@ function Pricing() {
 
   useEffect(() => { status().then(r => { setReady(r.ready); setMode(r.mode); }).catch(() => setReady(false)); }, [status]);
   useEffect(() => {
-    const txnid = new URLSearchParams(window.location.search).get("payu_txnid"); if (!txnid || !user) return;
+    const params = new URLSearchParams(window.location.search); const txnid = params.get("payu_txnid"); const result = params.get("payu_result"); if (!txnid || !user) return;
     setVerifying(true);
     (async () => {
-      for (let i=0;i<6;i++) { const r = await confirm({ data: { txnid } }); if (r.status === "paid") { await refresh(); toast.success(r.plan === "lifetime" ? "Lifetime unlocked" : "Pro activated — 30 days added"); window.history.replaceState({}, "", "/pricing"); setVerifying(false); return; } if (r.status === "failed") { toast.error("Payment failed or cancelled"); break; } await new Promise(res => setTimeout(res, 2000)); }
+      for (let i=0;i<12;i++) { const r = await confirm({ data: { txnid } }); if (r.status === "paid") { await refresh(); toast.success(r.plan === "lifetime" ? "Lifetime unlocked" : "Pro activated — 30 days added"); window.history.replaceState({}, "", "/pricing"); setVerifying(false); return; } if (r.status === "failed") { toast.error("Payment failed or cancelled"); break; } await new Promise(res => setTimeout(res, 2500)); }
+      if (result === "invalid_hash" || result === "fulfilment_error" || result === "amount_mismatch" || result === "order_not_found") toast.error("Payment received but activation needs review. Your order ID is saved.");
+      else toast.info("Payment is still being verified. Your plan will unlock automatically after PayU confirms it.");
       setVerifying(false); window.history.replaceState({}, "", "/pricing");
     })().catch(e => { setVerifying(false); toast.error(e instanceof Error ? e.message : "Verification failed"); });
   }, [user?.id]);
