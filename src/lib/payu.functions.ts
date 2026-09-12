@@ -22,11 +22,7 @@ export const payuStatus = createServerFn({ method: "GET" }).handler(async () => 
 
 export const createPayUCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-<<<<<<< HEAD
-  .validator((data: { plan: PaidPlan; returnUrl: string; phone?: string; firstName?: string }) => {
-=======
   .inputValidator((data: { plan: PaidPlan; returnUrl: string; phone?: string; firstName?: string }) => {
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
     if (data.plan !== "pro" && data.plan !== "lifetime") throw new Error("Invalid plan");
     if (!/^https:\/\//.test(data.returnUrl) && !/^http:\/\/localhost/.test(data.returnUrl)) throw new Error("Invalid return URL");
     return data;
@@ -59,11 +55,7 @@ export const createPayUCheckout = createServerFn({ method: "POST" })
 
 export const confirmPayUCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-<<<<<<< HEAD
-  .validator((data: { txnid: string }) => {
-=======
   .inputValidator((data: { txnid: string }) => {
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
     if (!data.txnid || data.txnid.length > 120) throw new Error("Invalid transaction");
     return data;
   })
