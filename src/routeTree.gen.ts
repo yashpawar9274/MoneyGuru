@@ -9,91 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-<<<<<<< HEAD
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutUsRouteImport } from './routes/about-us'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AiRouteImport } from './routes/ai'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as ContactUsRouteImport } from './routes/contact-us'
-import { Route as DebtsRouteImport } from './routes/debts'
-import { Route as LedgerRouteImport } from './routes/ledger'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as ReceiptsRouteImport } from './routes/receipts'
-import { Route as RefundCancellationPolicyRouteImport } from './routes/refund-cancellation-policy'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
-import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
-import { Route as TransactionsRouteImport } from './routes/transactions'
-import { Route as ApiScanBillRouteImport } from './routes/api/scan-bill'
-import { Route as ApiTtsRouteImport } from './routes/api/tts'
-import { Route as ApiPublicAiAdviceRouteImport } from './routes/api/public/ai-advice'
-import { Route as ApiPublicPayuReturnRouteImport } from './routes/api/public/payu-return'
-import { Route as ApiPublicPayuWebhookRouteImport } from './routes/api/public/payu-webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutUsRoute = AboutUsRouteImport.update({
-  id: '/about-us',
-  path: '/about-us',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiRoute = AiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactUsRoute = ContactUsRouteImport.update({
-  id: '/contact-us',
-  path: '/contact-us',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebtsRoute = DebtsRouteImport.update({
-  id: '/debts',
-  path: '/debts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LedgerRoute = LedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
-  id: '/privacy-policy',
-  path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReceiptsRoute = ReceiptsRouteImport.update({
-  id: '/receipts',
-  path: '/receipts',
-=======
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
@@ -137,7 +52,6 @@ const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundCancellationPolicyRoute =
@@ -146,31 +60,6 @@ const RefundCancellationPolicyRoute =
     path: '/refund-cancellation-policy',
     getParentRoute: () => rootRouteImport,
   } as any)
-<<<<<<< HEAD
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
-  id: '/shipping-policy',
-  path: '/shipping-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
-  id: '/terms-and-conditions',
-  path: '/terms-and-conditions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TransactionsRoute = TransactionsRouteImport.update({
-  id: '/transactions',
-  path: '/transactions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiScanBillRoute = ApiScanBillRouteImport.update({
-  id: '/api/scan-bill',
-  path: '/api/scan-bill',
-=======
 const ReceiptsRoute = ReceiptsRouteImport.update({
   id: '/receipts',
   path: '/receipts',
@@ -229,7 +118,6 @@ const AboutUsRoute = AboutUsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
@@ -237,20 +125,9 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
   path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
-const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
-  id: '/api/public/ai-advice',
-  path: '/api/public/ai-advice',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPayuReturnRoute = ApiPublicPayuReturnRouteImport.update({
-  id: '/api/public/payu-return',
-  path: '/api/public/payu-return',
-=======
 const ApiScanBillRoute = ApiScanBillRouteImport.update({
   id: '/api/scan-bill',
   path: '/api/scan-bill',
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPayuWebhookRoute = ApiPublicPayuWebhookRouteImport.update({
@@ -258,11 +135,6 @@ const ApiPublicPayuWebhookRoute = ApiPublicPayuWebhookRouteImport.update({
   path: '/api/public/payu-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-=======
 const ApiPublicPayuReturnRoute = ApiPublicPayuReturnRouteImport.update({
   id: '/api/public/payu-return',
   path: '/api/public/payu-return',
@@ -271,7 +143,6 @@ const ApiPublicPayuReturnRoute = ApiPublicPayuReturnRouteImport.update({
 const ApiPublicAiAdviceRoute = ApiPublicAiAdviceRouteImport.update({
   id: '/api/public/ai-advice',
   path: '/api/public/ai-advice',
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
   getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
@@ -279,14 +150,11 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-<<<<<<< HEAD
-=======
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -477,117 +345,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-<<<<<<< HEAD
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about-us': {
-      id: '/about-us'
-      path: '/about-us'
-      fullPath: '/about-us'
-      preLoaderRoute: typeof AboutUsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai': {
-      id: '/ai'
-      path: '/ai'
-      fullPath: '/ai'
-      preLoaderRoute: typeof AiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact-us': {
-      id: '/contact-us'
-      path: '/contact-us'
-      fullPath: '/contact-us'
-      preLoaderRoute: typeof ContactUsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debts': {
-      id: '/debts'
-      path: '/debts'
-      fullPath: '/debts'
-      preLoaderRoute: typeof DebtsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ledger': {
-      id: '/ledger'
-      path: '/ledger'
-      fullPath: '/ledger'
-      preLoaderRoute: typeof LedgerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy-policy': {
-      id: '/privacy-policy'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy'
-      preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/receipts': {
-      id: '/receipts'
-      path: '/receipts'
-      fullPath: '/receipts'
-      preLoaderRoute: typeof ReceiptsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refund-cancellation-policy': {
-      id: '/refund-cancellation-policy'
-      path: '/refund-cancellation-policy'
-      fullPath: '/refund-cancellation-policy'
-      preLoaderRoute: typeof RefundCancellationPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shipping-policy': {
-      id: '/shipping-policy'
-      path: '/shipping-policy'
-      fullPath: '/shipping-policy'
-      preLoaderRoute: typeof ShippingPolicyRouteImport
-=======
     '/transactions': {
       id: '/transactions'
       path: '/transactions'
       fullPath: '/transactions'
       preLoaderRoute: typeof TransactionsRouteImport
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
       parentRoute: typeof rootRouteImport
     }
     '/terms-and-conditions': {
@@ -597,20 +359,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsAndConditionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
-    '/transactions': {
-      id: '/transactions'
-      path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof TransactionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/scan-bill': {
-      id: '/api/scan-bill'
-      path: '/api/scan-bill'
-      fullPath: '/api/scan-bill'
-      preLoaderRoute: typeof ApiScanBillRouteImport
-=======
     '/shipping-policy': {
       id: '/shipping-policy'
       path: '/shipping-policy'
@@ -714,7 +462,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
       parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
@@ -724,26 +471,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
-    '/api/public/ai-advice': {
-      id: '/api/public/ai-advice'
-      path: '/api/public/ai-advice'
-      fullPath: '/api/public/ai-advice'
-      preLoaderRoute: typeof ApiPublicAiAdviceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payu-return': {
-      id: '/api/public/payu-return'
-      path: '/api/public/payu-return'
-      fullPath: '/api/public/payu-return'
-      preLoaderRoute: typeof ApiPublicPayuReturnRouteImport
-=======
     '/api/scan-bill': {
       id: '/api/scan-bill'
       path: '/api/scan-bill'
       fullPath: '/api/scan-bill'
       preLoaderRoute: typeof ApiScanBillRouteImport
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
       parentRoute: typeof rootRouteImport
     }
     '/api/public/payu-webhook': {
@@ -753,13 +485,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPayuWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-=======
     '/api/public/payu-return': {
       id: '/api/public/payu-return'
       path: '/api/public/payu-return'
@@ -772,7 +497,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/ai-advice'
       fullPath: '/api/public/ai-advice'
       preLoaderRoute: typeof ApiPublicAiAdviceRouteImport
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/webhook': {
@@ -782,8 +506,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-<<<<<<< HEAD
-=======
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -791,7 +513,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
->>>>>>> c827c385bc350f48ca590c4c80b2e38da8f69aaf
   }
 }
 
