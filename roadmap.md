@@ -1,5 +1,6 @@
 # Roadmap
 
+- [ ] Guru Voice AI: secure premium voice conversation with real finance context
 - [x] Payments: PayU checkout and server-side fulfilment
 - [x] Auth email templates setup (scaffolded, branded neon lime)
 - [x] Email infra: managed service, domain verified — needs publish to activate
