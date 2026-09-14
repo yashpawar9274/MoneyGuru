@@ -610,10 +610,12 @@ export type Database = {
       activate_pro: { Args: never; Returns: undefined }
       apply_paid_order: { Args: { p_order_id: string }; Returns: string }
       bootstrap_account: { Args: never; Returns: undefined }
-      consume_guru_voice_quota: {
-        Args: { _limit?: number; _window?: string }
-        Returns: boolean
-      }
+      consume_guru_voice_quota:
+        | { Args: { _limit?: number; _window?: string }; Returns: boolean }
+        | {
+            Args: { _limit?: number; _user_id: string; _window?: string }
+            Returns: boolean
+          }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
