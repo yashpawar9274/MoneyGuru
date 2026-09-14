@@ -19,7 +19,7 @@ export interface Profile {
   language: string;
 }
 
-export type Plan = "free" | "pro" | "lifetime";
+export type Plan = "free" | "weekly" | "pro" | "lifetime";
 
 export interface Subscription {
   plan: Plan;

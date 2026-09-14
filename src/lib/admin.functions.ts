@@ -178,7 +178,15 @@ export const unlockCustomerPro = createServerFn({ method: "POST" })
       .maybeSingle();
     if (customerError || !customer) throw new Error("Customer not found");
 
-    const subscription =
+    const subscription: {
+      user_id: string;
+      plan: "pro" | "lifetime";
+      status: string;
+      price_inr: number;
+      current_period_end: string | null;
+      trial_ends_at: string | null;
+      updated_at: string;
+    } =
       data.plan === "lifetime"
         ? {
             user_id: data.userId,
