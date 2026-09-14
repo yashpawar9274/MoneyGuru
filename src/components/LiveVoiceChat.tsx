@@ -1,3 +1,338 @@
+<<<<<<< HEAD
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
+import { Crown, LockKeyhole, Mic, Send, Square, Trash2 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
+import { getGuruAccess, guruTalk } from "@/lib/guru-chat.functions";
+import { guruSpeak } from "@/lib/guru-speech.functions";
+import { hasActivePremium } from "@/lib/premium";
+import { getVoiceLang } from "@/lib/voices";
+import { playGuruAudio, speakGuruOnDevice } from "@/lib/guru-audio";
+import {
+  GuruVoiceController,
+  EMPTY_VOICE,
+  type GuruRecognizer,
+  type GuruState,
+} from "@/lib/guru-voice-controller";
+import type { GuruLanguage } from "@/lib/guru-contract";
+import { setGuruVoiceFocus } from "@/lib/voice-focus";
+
+const LABELS: Record<GuruState, string> = {
+  off: "Ready to talk",
+  connecting: "Connecting",
+  listening: "Listening",
+  thinking: "Thinking",
+  speaking: "Speaking",
+  connected: "Connected",
+  microphone_denied: "Microphone denied",
+  offline: "Offline",
+};
+
+export function LiveVoiceChat() {
+  const { user, subscription } = useAuth();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  if (!user || !hasActivePremium(subscription, now)) return <GuruPremiumPreview />;
+  return <VoiceConversation key={user.id} />;
+}
+
+export function GuruPremiumPreview() {
+  return (
+    <section
+      aria-label="Guru Voice AI Premium"
+      className="rounded-3xl border border-neon/25 bg-gradient-to-br from-neon/10 to-accent/10 p-6 text-center"
+    >
+      <div className="mx-auto grid size-16 place-items-center rounded-full bg-neon/15 text-neon">
+        <Mic className="size-7" />
+      </div>
+      <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-neon">
+        New · Premium
+      </p>
+      <h2 className="mt-1 text-xl font-display font-bold">Guru Voice AI</h2>
+      <p className="mt-2 text-sm leading-relaxed text-foreground/70">
+        Your money. Your questions. A voice that helps you make sense of both.
+      </p>
+      <p className="mt-3 text-xs text-foreground/60">
+        Hindi · Hinglish · English
+        <br />
+        For active Weekly, Pro and Lifetime plans.
+      </p>
+      <Link
+        to="/pricing"
+        className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-neon px-5 py-3 text-sm font-bold text-neon-foreground"
+      >
+        <LockKeyhole className="size-4" />
+        Unlock Premium
+      </Link>
+    </section>
+  );
+}
+
+export function VoiceConversation() {
+  const { lang: appLanguage } = useI18n();
+  const access = useServerFn(getGuruAccess);
+  const talk = useServerFn(guruTalk);
+  const speech = useServerFn(guruSpeak);
+  const [language, setLanguage] = useState<GuruLanguage>("auto");
+  const [state, setState] = useState(EMPTY_VOICE);
+  const [draft, setDraft] = useState("");
+  const controller = useRef<GuruVoiceController | null>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const actualLanguage = language === "auto" ? (appLanguage === "hi" ? "hi" : "en") : language;
+
+  useEffect(() => {
+    const preference = getVoiceLang();
+    if (preference === "hi" || preference === "en") setLanguage(preference);
+  }, []);
+  useEffect(() => {
+    let heartbeatRequest: AbortController | null = null;
+    const voice = new GuruVoiceController(
+      {
+        access: (signal) => access({ signal }),
+        talk: (messages, lang, signal) => talk({ data: { messages, lang }, signal }),
+        speech: (text, lang, signal) => speech({ data: { text, lang }, signal }),
+        play: playGuruAudio,
+        deviceSpeak: speakGuruOnDevice,
+        recognizer: () => {
+          const w = window as unknown as {
+            SpeechRecognition?: new () => GuruRecognizer;
+            webkitSpeechRecognition?: new () => GuruRecognizer;
+          };
+          const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+          return Ctor ? new Ctor() : null;
+        },
+        online: () => navigator.onLine,
+        secure: () => window.isSecureContext,
+        changed: (snapshot) => {
+          if (!snapshot.live) heartbeatRequest?.abort();
+          setState(snapshot);
+          setGuruVoiceFocus(
+            snapshot.live || ["connecting", "thinking", "speaking"].includes(snapshot.state),
+          );
+        },
+      },
+      "en",
+    );
+    controller.current = voice;
+    const offline = () => voice.setOffline();
+    const online = () => voice.setOnline();
+    const hidden = () => {
+      if (document.hidden) voice.stop("Conversation paused while the app is in the background.");
+    };
+    const pagehide = () => voice.stop();
+    window.addEventListener("offline", offline);
+    window.addEventListener("online", online);
+    window.addEventListener("pagehide", pagehide);
+    document.addEventListener("visibilitychange", hidden);
+    const heartbeat = setInterval(() => {
+      if (!voice.snapshot.live || heartbeatRequest) return;
+      const request = new AbortController();
+      heartbeatRequest = request;
+      void access({ signal: request.signal })
+        .then((result) => {
+          if (request.signal.aborted || !voice.snapshot.live) return;
+          if (!result.ok && result.code === "PREMIUM_REQUIRED") voice.revokeAccess();
+        })
+        .catch(() => {
+          if (!request.signal.aborted && voice.snapshot.live)
+            voice.stop("Could not recheck access. Please reconnect.");
+        })
+        .finally(() => {
+          if (heartbeatRequest === request) heartbeatRequest = null;
+        });
+    }, 30000);
+    return () => {
+      clearInterval(heartbeat);
+      heartbeatRequest?.abort();
+      voice.dispose();
+      controller.current = null;
+      setGuruVoiceFocus(false);
+      window.removeEventListener("offline", offline);
+      window.removeEventListener("online", online);
+      window.removeEventListener("pagehide", pagehide);
+      document.removeEventListener("visibilitychange", hidden);
+    };
+  }, [access, talk, speech]);
+  useEffect(() => {
+    controller.current?.setLanguage(actualLanguage);
+  }, [actualLanguage, access, talk, speech]);
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
+  }, [state.turns, state.partial]);
+
+  if (state.premiumDenied) return <GuruPremiumPreview />;
+  const busy = ["connecting", "thinking", "speaking"].includes(state.state);
+  const animated = state.state === "listening" || state.state === "speaking";
+  const send = () => {
+    if (draft.trim() && !busy) {
+      void controller.current?.send(draft);
+      setDraft("");
+    }
+  };
+
+  return (
+    <section
+      aria-label="Guru Voice AI Premium"
+      className="overflow-hidden rounded-3xl border border-neon/30 bg-card"
+    >
+      <div className="bg-gradient-to-br from-neon/10 via-card to-accent/10 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-bold">Guru Voice AI</h2>
+          <span className="flex items-center gap-1 rounded-full bg-neon/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neon">
+            <Crown className="size-3" />
+            Premium
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-foreground/60">Your personal AI money conversation</p>
+        <div className="my-6 flex flex-col items-center gap-3">
+          <div
+            aria-hidden="true"
+            className={`grid size-24 place-items-center rounded-full border border-neon/40 bg-neon/10 text-neon ${animated ? "motion-safe:animate-pulse" : ""}`}
+          >
+            <div className="flex h-10 items-center gap-1.5">
+              {[12, 25, 38, 25, 12].map((height, i) => (
+                <span
+                  key={i}
+                  style={{ height, animationDelay: `${i * 110}ms` }}
+                  className={`w-1.5 rounded-full bg-neon ${animated ? "motion-safe:animate-pulse" : ""}`}
+                />
+              ))}
+            </div>
+          </div>
+          <p role="status" aria-live="polite" className="text-sm font-semibold text-neon">
+            {LABELS[state.state]}
+          </p>
+        </div>
+        <label className="flex items-center justify-between gap-3 text-xs text-foreground/70">
+          Conversation language
+          <select
+            aria-label="Conversation language"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as GuruLanguage)}
+            className="min-h-11 rounded-xl border border-border bg-secondary px-3 text-sm text-foreground"
+          >
+            <option value="auto">App language</option>
+            <option value="hi">हिंदी</option>
+            <option value="hinglish">Hinglish</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() =>
+            state.live || busy ? controller.current?.stop() : void controller.current?.start()
+          }
+          className={`mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold ${state.live || busy ? "bg-secondary text-foreground" : "bg-neon text-neon-foreground"}`}
+        >
+          {state.live || busy ? (
+            <>
+              <Square className="size-4" />
+              End Conversation
+            </>
+          ) : (
+            <>
+              <Mic className="size-4" />
+              Start Conversation
+            </>
+          )}
+        </button>
+        <p className="mt-3 text-center text-[11px] leading-relaxed text-foreground/55">
+          Microphone starts only when you tap Start. Speech recognition may use your browser's voice
+          service. Questions and limited finance context are processed by AI providers.
+        </p>
+      </div>
+      <div className="border-t border-border p-4">
+        {state.message && (
+          <p
+            role="status"
+            className="mb-3 rounded-xl bg-secondary p-3 text-xs leading-relaxed text-foreground/80"
+          >
+            {state.message}
+          </p>
+        )}
+        <div
+          ref={scroller}
+          role="log"
+          aria-label="Conversation transcript"
+          aria-live="polite"
+          className="max-h-72 space-y-3 overflow-y-auto"
+        >
+          {!state.turns.length && (
+            <p className="px-1 py-3 text-sm text-foreground/60">
+              “Is month kitna kharch hua?”
+              <br />
+              “Mujhe kitni udhari deni baaki hai?”
+            </p>
+          )}
+          {state.turns.map((turn, index) => (
+            <div
+              key={index}
+              className={`max-w-[92%] break-words rounded-2xl px-3 py-2.5 text-sm leading-relaxed ${turn.role === "user" ? "ml-auto bg-secondary" : "bg-neon/10"}`}
+            >
+              <p className="mb-1 text-[10px] font-bold uppercase text-foreground/50">
+                {turn.role === "user" ? "You" : "Guru · AI"}
+              </p>
+              {turn.content}
+            </div>
+          ))}
+          {state.partial && (
+            <p className="ml-auto max-w-[92%] break-words rounded-2xl bg-secondary/50 px-3 py-2 text-sm italic text-foreground/65">
+              {state.partial}
+            </p>
+          )}
+        </div>
+        <form
+          className="mt-4 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
+          <input
+            aria-label="Ask Guru a question"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            maxLength={1000}
+            placeholder="Or type your question…"
+            className="min-w-0 flex-1 rounded-full border border-border bg-secondary px-4 py-3 text-sm outline-none focus:border-neon"
+          />
+          <button
+            type="submit"
+            aria-label="Send question"
+            disabled={busy || !draft.trim() || state.state === "offline"}
+            className="grid size-12 shrink-0 place-items-center rounded-full bg-neon text-neon-foreground disabled:opacity-40"
+          >
+            <Send className="size-4" />
+          </button>
+        </form>
+        <div className="mt-3 flex items-center justify-between gap-2 text-[10px] text-foreground/55">
+          <span>
+            {state.remaining === null
+              ? "Up to 60 turns/day · fair use"
+              : `${state.remaining} turns left today`}
+          </span>
+          <button
+            type="button"
+            onClick={() => controller.current?.clear()}
+            className="flex min-h-11 items-center gap-1 px-2"
+            aria-label="Clear conversation"
+          >
+            <Trash2 className="size-3" />
+            Clear
+          </button>
+        </div>
+        <p className="text-[10px] leading-relaxed text-foreground/45">
+          Session-only transcript. No recordings or transcripts saved by this app. Provider
+          retention policies apply. AI can be wrong; check important figures.
+        </p>
+      </div>
+    </section>
+=======
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mic, MicOff, Loader2, Radio, Send, Square } from "lucide-react";
@@ -232,5 +567,6 @@ export function LiveVoiceChat() {
         </button>
       )}
     </div>
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
   );
 }

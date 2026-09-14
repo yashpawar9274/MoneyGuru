@@ -302,6 +302,30 @@ export type Database = {
         }
         Relationships: []
       }
+<<<<<<< HEAD
+=======
+      guru_voice_quota: {
+        Row: {
+          request_count: number
+          updated_at: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          request_count?: number
+          updated_at?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          request_count?: number
+          updated_at?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
       payments: {
         Row: {
           amount_inr: number
@@ -589,6 +613,15 @@ export type Database = {
       activate_pro: { Args: never; Returns: undefined }
       apply_paid_order: { Args: { p_order_id: string }; Returns: string }
       bootstrap_account: { Args: never; Returns: undefined }
+<<<<<<< HEAD
+=======
+      consume_guru_voice_quota:
+        | { Args: { _limit?: number; _window?: string }; Returns: boolean }
+        | {
+            Args: { _limit?: number; _user_id: string; _window?: string }
+            Returns: boolean
+          }
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

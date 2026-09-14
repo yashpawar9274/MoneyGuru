@@ -1,5 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+<<<<<<< HEAD
+import type { TablesInsert } from "@/integrations/supabase/types";
+=======
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
 
 export type AdminCustomer = {
   id: string;
@@ -178,7 +182,19 @@ export const unlockCustomerPro = createServerFn({ method: "POST" })
       .maybeSingle();
     if (customerError || !customer) throw new Error("Customer not found");
 
-    const subscription =
+<<<<<<< HEAD
+    const subscription: TablesInsert<"subscriptions"> =
+=======
+    const subscription: {
+      user_id: string;
+      plan: "pro" | "lifetime";
+      status: string;
+      price_inr: number;
+      current_period_end: string | null;
+      trial_ends_at: string | null;
+      updated_at: string;
+    } =
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
       data.plan === "lifetime"
         ? {
             user_id: data.userId,

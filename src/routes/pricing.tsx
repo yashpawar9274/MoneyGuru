@@ -36,6 +36,10 @@ const FEATURES = [
   "Udhari + EMI tools",
   "Advanced analytics",
   "Voice money assistant",
+<<<<<<< HEAD
+  "Guru Voice AI Premium — Hindi, Hinglish, English (60 turns/day)",
+=======
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
 ];
 
 function submitPayU(action: string, fields: Record<string, string>) {

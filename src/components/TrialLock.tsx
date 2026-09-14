@@ -37,7 +37,12 @@ export function TrialLock() {
   const endsAt = subscription?.trial_ends_at ? +new Date(subscription.trial_ends_at) : null;
   const left = endsAt ? endsAt - now : null;
   const locked = !isPro && left !== null && left <= 0;
+<<<<<<< HEAD
+  const spokenLang =
+    getVoiceLang() === "auto" ? lang : (getVoiceLang() as "en" | "hi" | "es" | "fr");
+=======
   const spokenLang = getVoiceLang() === "auto" ? lang : (getVoiceLang() as "en" | "hi" | "es" | "fr");
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
 
   // Live announcement: fires the moment the trial flips to expired (or on load when locked).
   useEffect(() => {
@@ -46,7 +51,13 @@ export function TrialLock() {
     (async () => {
       const name = profile?.full_name?.trim() || "";
       try {
+<<<<<<< HEAD
+        const { line: l } = await getLine({
+          data: { name, lang: spokenLang, kind: "expired", minutesLeft: 0 },
+        });
+=======
         const { line: l } = await getLine({ data: { name, lang: spokenLang, kind: "expired", minutesLeft: 0 } });
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
         setLine(l);
         await speakLine(l, spokenLang);
       } catch {
@@ -86,8 +97,14 @@ export function TrialLock() {
 
   if (isPro || left === null) return null;
 
+<<<<<<< HEAD
+  // AIPage renders only its premium preview after the trial ends.
+  const payScreen =
+    pathname.startsWith("/pricing") || pathname.startsWith("/settings") || pathname === "/ai";
+=======
   // Never cover the checkout/settings screens — the user must be able to buy a plan.
   const payScreen = pathname.startsWith("/pricing") || pathname.startsWith("/settings");
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
   if (locked && payScreen) return null;
 
   if (!locked) {
@@ -107,8 +124,13 @@ export function TrialLock() {
         </div>
         <h1 className="mt-5 text-2xl font-display font-bold">Free trial khatam</h1>
         <p className="mt-2 text-sm text-foreground/60 leading-relaxed">
+<<<<<<< HEAD
+          Your 24-hour free access has ended. Unlock all features — tracking, analytics, bill scan,
+          AI coach and udhari/EMI — for ₹100 per month.
+=======
           Your 24-hour free access has ended. Unlock all features — tracking, analytics, bill scan, AI
           coach and udhari/EMI — for ₹100 per month.
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
         </p>
 
         {line && (

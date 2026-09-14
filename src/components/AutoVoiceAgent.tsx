@@ -7,6 +7,10 @@ import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import type { Transaction } from "@/lib/types";
+<<<<<<< HEAD
+import { isGuruVoiceActive } from "@/lib/voice-focus";
+=======
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
 
 export const TX_ADDED_EVENT = "money-fyi:tx-added";
 
@@ -21,14 +25,25 @@ export function AutoVoiceAgent() {
 
   useEffect(() => {
     const onAdded = async (e: Event) => {
+<<<<<<< HEAD
+      if (!getAutoSpeak() || busy.current || isGuruVoiceActive()) return;
+=======
       if (!getAutoSpeak() || busy.current) return;
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
       const tx = (e as CustomEvent<Transaction>).detail;
       if (!tx) return;
       busy.current = true;
       try {
         const today = new Date().toISOString().slice(0, 10);
         const all = txRef.current;
+<<<<<<< HEAD
+        let todaySpend = 0,
+          todayIncome = 0,
+          income = 0,
+          expense = 0;
+=======
         let todaySpend = 0, todayIncome = 0, income = 0, expense = 0;
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
         for (const t of all) {
           if (t.type === "income") income += t.amount;
           else expense += t.amount;

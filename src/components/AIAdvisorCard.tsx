@@ -7,7 +7,12 @@ import { getAiAdvice } from "@/lib/ai.functions";
 import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+<<<<<<< HEAD
+import { speakLine } from "@/lib/speech";
+import { isGuruVoiceActive } from "@/lib/voice-focus";
+=======
 import { getVoiceId, getElevenKey } from "@/lib/voices";
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
 
 export function AIAdvisorCard() {
   const { transactions } = useStore();
@@ -20,7 +25,15 @@ export function AIAdvisorCard() {
       fetchAdvice({
         data: {
           transactions: transactions.slice(0, 80).map((tx) => ({
+<<<<<<< HEAD
+            type: tx.type,
+            amount: tx.amount,
+            category: tx.category,
+            note: tx.note,
+            date: tx.date,
+=======
             type: tx.type, amount: tx.amount, category: tx.category, note: tx.note, date: tx.date,
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
           })),
           lang,
         },
@@ -29,6 +42,19 @@ export function AIAdvisorCard() {
   });
 
   const speak = async (text: string) => {
+<<<<<<< HEAD
+    if (isGuruVoiceActive()) {
+      toast("End the Guru conversation before playing another voice.");
+      return;
+    }
+    setPlaying(true);
+    try {
+      await speakLine(text, lang);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Playback failed");
+    } finally {
+      setPlaying(false);
+=======
     setPlaying(true);
     try {
       const r = await fetch("/api/tts", {
@@ -52,16 +78,31 @@ export function AIAdvisorCard() {
     } catch (e) {
       setPlaying(false);
       toast.error(e instanceof Error ? e.message : "Playback failed");
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
     }
   };
 
   const result = advice.data;
   const level = result?.alertLevel ?? "good";
+<<<<<<< HEAD
+  const accent =
+    level === "danger"
+      ? "border-destructive/40"
+      : level === "watch"
+        ? "border-accent/40"
+        : "border-neon/30";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+=======
   const accent = level === "danger" ? "border-destructive/40" : level === "watch" ? "border-accent/40" : "border-neon/30";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
       className={`bg-card border ${accent} p-4 rounded-2xl relative overflow-hidden`}
     >
       <div className="absolute -top-10 -right-10 size-24 bg-neon/20 blur-3xl rounded-full" />

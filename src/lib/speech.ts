@@ -1,4 +1,9 @@
 import { getVoiceId, getElevenKey, bcp47 } from "@/lib/voices";
+<<<<<<< HEAD
+import { isGuruVoiceActive, VOICE_FOCUS_EVENT } from "./voice-focus";
+import { playGuruBlob } from "./guru-audio";
+=======
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
 
 export type SpeakLang = "en" | "hi" | "es" | "fr";
 
@@ -15,6 +20,77 @@ const CURRENCY_WORD: Record<SpeakLang, string> = {
  */
 export function toSpeakable(text: string, lang: SpeakLang): string {
   const money = CURRENCY_WORD[lang] ?? CURRENCY_WORD.en;
+<<<<<<< HEAD
+  return (
+    text
+      // emoji & pictographs
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]|\uFE0F|\u200D/gu, " ")
+      // markdown / stray symbols
+      .replace(/[*_`#~>|()"]|\[|\]/g, " ")
+      // ₹1,234.50 / Rs. 1234 -> "1234 rupaye"
+      .replace(
+        /(?:₹|\bRs\.?|\bINR)\s?([\d,]+(?:\.\d+)?)/gi,
+        (_m, n: string) => ` ${n.replace(/,/g, "").replace(/\.00$/, "")} ${money} `,
+      )
+      .replace(/₹/g, ` ${money} `)
+      .replace(/(\d),(\d)/g, "$1$2")
+      .replace(/\s*\/\s*/g, " ")
+      .replace(/\s*-\s*/g, ", ")
+      .replace(/\s{2,}/g, " ")
+      .replace(/\s+([,.!?])/g, "$1")
+      .trim()
+  );
+}
+
+/** Legacy voices remain available, but yield the microphone/audio channel to Guru. */
+export async function speakLine(text: string, lang: SpeakLang): Promise<void> {
+  if (isGuruVoiceActive()) return;
+  const clean = toSpeakable(text, lang);
+  if (!clean) return;
+  const controller = new AbortController();
+  const stop = () => {
+    if (isGuruVoiceActive()) controller.abort();
+  };
+  window.addEventListener(VOICE_FOCUS_EVENT, stop);
+  try {
+    try {
+      const r = await fetch("/api/tts", {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clean, voiceId: getVoiceId(), userKey: getElevenKey(), lang }),
+      });
+      if (!r.ok) throw new Error("tts");
+      await playGuruBlob(await r.blob(), controller.signal);
+    } catch {
+      if (controller.signal.aborted) return;
+      if (!("speechSynthesis" in window)) return;
+      await new Promise<void>((resolve) => {
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = bcp47(lang);
+        u.rate = 0.95;
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          u.onend = null;
+          u.onerror = null;
+          controller.signal.removeEventListener("abort", finish);
+          speechSynthesis.cancel();
+          resolve();
+        };
+        const timer = setTimeout(finish, 120000);
+        controller.signal.addEventListener("abort", finish, { once: true });
+        u.onend = finish;
+        u.onerror = finish;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      });
+    }
+  } finally {
+    window.removeEventListener(VOICE_FOCUS_EVENT, stop);
+=======
   return text
     // emoji & pictographs
     .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, " ")
@@ -61,5 +137,6 @@ export async function speakLine(text: string, lang: SpeakLang): Promise<void> {
     } catch {
       /* voice unavailable */
     }
+>>>>>>> 19a84892e6f43cd67650f8aa890fa56bd5a38256
   }
 }
