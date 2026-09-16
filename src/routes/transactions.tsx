@@ -6,7 +6,16 @@ import { CATEGORIES, categoryMeta, type Category, type TxType } from "@/lib/type
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/transactions")({
-  head: () => ({ meta: [{ title: "Money — MoneyGuruAI" }, { name: "description", content: "Search and filter your income and expenses." }] }),
+  head: () => ({
+    meta: [
+      { title: "Money Tracker — MoneyGuruAI" },
+      { name: "description", content: "Search and filter your income and expenses by date, type, and category." },
+      { property: "og:title", content: "Money Tracker — MoneyGuruAI" },
+      { property: "og:description", content: "Search and filter your income and expenses by date, type, and category." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: MoneyScreen,
 });
 
@@ -61,13 +70,13 @@ function MoneyScreen() {
       <div className="text-right text-[11px] text-foreground/50"><p><span className="text-success font-bold">+{inr(summary.income)}</span> in</p><p><span className="text-danger font-bold">-{inr(summary.expense)}</span> out</p></div>
     </div>
 
-    <div className="relative mt-5"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/35"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search note, category or amount" className="w-full rounded-2xl border border-border bg-card py-3.5 pl-10 pr-10 text-sm outline-none focus:border-neon/60"/>{query && <button onClick={()=>setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2"><X className="size-4 text-foreground/40"/></button>}</div>
+    <div className="relative mt-5"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/35"/><input aria-label="Search transactions" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search note, category or amount" className="w-full rounded-2xl border border-border bg-card py-3.5 pl-10 pr-10 text-sm outline-none focus:border-neon/60"/>{query && <button aria-label="Clear search" onClick={()=>setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2"><X className="size-4 text-foreground/40"/></button>}</div>
 
     <section className="mt-4 rounded-2xl border border-border bg-card p-3">
       <div className="mb-3 flex items-center justify-between"><span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/50"><SlidersHorizontal className="size-3.5"/> Filters</span><button onClick={clear} className="text-[10px] font-bold uppercase tracking-wider text-neon">Clear</button></div>
       <div className="flex gap-2 overflow-x-auto pb-1">{(["all","today","week","month","custom"] as DateFilter[]).map(v=><button key={v} onClick={()=>setDateFilter(v)} className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-bold ${dateFilter===v?"bg-neon text-neon-foreground":"bg-secondary text-foreground/60"}`}>{v==="all"?"All dates":v==="week"?"This week":v==="month"?"This month":v[0].toUpperCase()+v.slice(1)}</button>)}</div>
-      {dateFilter === "custom" && <div className="mt-3 grid grid-cols-2 gap-2"><input type="date" value={from} onChange={e=>setFrom(e.target.value)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"/><input type="date" value={to} onChange={e=>setTo(e.target.value)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"/></div>}
-      <div className="mt-3 grid grid-cols-2 gap-2"><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value as TypeFilter)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select><select value={category} onChange={e=>setCategory(e.target.value as "all"|Category)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"><option value="all">All categories</option>{CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
+      {dateFilter === "custom" && <div className="mt-3 grid grid-cols-2 gap-2"><input aria-label="From date" type="date" value={from} max={to || undefined} onChange={e=>setFrom(e.target.value)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"/><input aria-label="To date" type="date" value={to} min={from || undefined} onChange={e=>setTo(e.target.value)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"/></div>}
+      <div className="mt-3 grid grid-cols-2 gap-2"><select aria-label="Transaction type" value={typeFilter} onChange={e=>setTypeFilter(e.target.value as TypeFilter)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select><select aria-label="Transaction category" value={category} onChange={e=>setCategory(e.target.value as "all"|Category)} className="min-w-0 rounded-xl bg-secondary p-2.5 text-xs"><option value="all">All categories</option>{CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
     </section>
 
     <div className="mt-5 flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-foreground/45">{filtered.length} transaction{filtered.length===1?"":"s"}</p></div>

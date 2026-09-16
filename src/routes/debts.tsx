@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send, Pencil, Share2, Camera, ChevronDown, Zap, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, X, Check, HandCoins, Wallet, CreditCard, Bell, Sparkles, CalendarClock, Brain, PiggyBank, Loader2, MessageCircle, Send, Pencil, Share2, Camera, ChevronDown, Zap, Image as ImageIcon, Phone, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
@@ -12,13 +12,17 @@ import { chatDebtCoach } from "@/lib/debt-chat.functions";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { UdhaariLedgerSheet, isPersonDebt, normalizeDebtPerson } from "@/components/UdhaariLedgerSheet";
+import { ReceiptSheet, UdhaariLedgerSheet, isPersonDebt, normalizeDebtPerson } from "@/components/UdhaariLedgerSheet";
 
 export const Route = createFileRoute("/debts")({
   head: () => ({
     meta: [
       { title: "Udhari & EMI — MONEY.FYI" },
       { name: "description", content: "Track udhari (loans) and EMIs. Mark payments and see remaining balance." },
+      { property: "og:title", content: "Udhari & EMI — MONEY.FYI" },
+      { property: "og:description", content: "Track every person's Udhari, contact them, and share accurate receipts." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DebtsPage,
@@ -33,6 +37,11 @@ const KIND_META: Record<DebtKind, { label: string; tint: string; Icon: typeof Ha
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
 const FREQ_LABEL: Record<PayFreq, string> = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
+
+function contactNumber(value: string) {
+  const digits = value.replace(/\D/g, "");
+  return digits.length === 10 ? `91${digits}` : digits;
+}
 
 function fmtDuration(days: number) {
   if (days < 1) return "Today";
@@ -49,6 +58,7 @@ function DebtsPage() {
   const [editFor, setEditFor] = useState<Debt | null>(null);
   const [moreFor, setMoreFor] = useState<Debt | null>(null);
   const [openLedger, setOpenLedger] = useState<string | null>(null);
+  const [receiptFor, setReceiptFor] = useState<Debt | null>(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const { transactions } = useStore();
@@ -333,6 +343,9 @@ function DebtsPage() {
           const meta = KIND_META[d.kind];
           const left = remaining(d);
           const pct = d.principal > 0 ? Math.min(100, (paidTotal(d) / d.principal) * 100) : 0;
+          const isPerson = isPersonDebt(d.kind);
+          const phone = d.contactPhone ? contactNumber(d.contactPhone) : "";
+          const whatsAppText = encodeURIComponent(`Hi ${d.title}, your current Udhari balance is ${inr(left)}. I am sharing this from MoneyFYI.`);
           return (
             <motion.div
               key={d.id}
@@ -388,8 +401,45 @@ function DebtsPage() {
                 <p className="text-[10px] text-foreground/50 mt-2">Due: {new Date(d.dueDate).toLocaleDateString()}</p>
               ) : null}
 
+              {isPerson && (
+                <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/70 pt-3">
+                  {phone ? (
+                    <>
+                      <a
+                        href={`tel:+${phone}`}
+                        aria-label={`Call ${d.title}`}
+                        className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-[10px] font-bold uppercase tracking-wider"
+                      >
+                        <Phone className="size-3.5" /> Call
+                      </a>
+                      <a
+                        href={`https://wa.me/${phone}?text=${whatsAppText}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`WhatsApp ${d.title}`}
+                        className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl bg-success/10 py-2.5 text-[10px] font-bold uppercase tracking-wider text-success"
+                      >
+                        <MessageCircle className="size-3.5" /> WhatsApp
+                      </a>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => toast.info("Add a mobile number when creating this person to call or WhatsApp")}
+                      className="col-span-2 flex min-w-0 items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-[10px] font-bold uppercase tracking-wider text-foreground/50"
+                    >
+                      <Phone className="size-3.5" /> No mobile number
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setReceiptFor(d)}
+                    className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neon/10 py-2.5 text-[10px] font-bold uppercase tracking-wider text-neon"
+                  >
+                    <FileText className="size-3.5" /> Receipt
+                  </button>
+                </div>
+              )}
 
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 <Link
                   to="/ledger"
                   search={{ debtId: d.id }}
@@ -452,6 +502,16 @@ function DebtsPage() {
         debt={debts.find((debt) => debt.id === openLedger) ?? null}
         onClose={() => setOpenLedger(null)}
       />
+      {receiptFor && (
+        <ReceiptSheet
+          debt={receiptFor}
+          onClose={() => setReceiptFor(null)}
+          onEdit={() => {
+            setReceiptFor(null);
+            setOpenLedger(receiptFor.id);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -578,7 +638,7 @@ function AddDebtSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: (d: { kind: DebtKind; title: string; principal: number; monthly?: number; dueDate?: string; planAmount?: number; planFreq?: PayFreq }) => void;
+  onSave: (d: { kind: DebtKind; title: string; principal: number; monthly?: number; dueDate?: string; planAmount?: number; planFreq?: PayFreq; contactPhone?: string }) => void;
 }) {
   const [kind, setKind] = useState<DebtKind>("udhari_taken");
   const [title, setTitle] = useState("");
@@ -587,6 +647,7 @@ function AddDebtSheet({
   const [dueDate, setDueDate] = useState("");
   const [planFreq, setPlanFreq] = useState<PayFreq>("monthly");
   const [planAmount, setPlanAmount] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
 
   const submit = () => {
     const p = parseFloat(principal);
@@ -601,8 +662,9 @@ function AddDebtSheet({
       dueDate: dueDate || undefined,
       planAmount: pa,
       planFreq: pa ? planFreq : undefined,
+      contactPhone: isPersonDebt(kind) && contactPhone.trim() ? contactPhone.trim() : undefined,
     });
-    setTitle(""); setPrincipal(""); setMonthly(""); setDueDate(""); setPlanAmount(""); setPlanFreq("monthly");
+    setTitle(""); setPrincipal(""); setMonthly(""); setDueDate(""); setPlanAmount(""); setPlanFreq("monthly"); setContactPhone("");
     onClose();
   };
 
@@ -618,7 +680,7 @@ function AddDebtSheet({
           <motion.div
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-card rounded-t-3xl z-50 p-6 pb-8 border-t border-border"
+            className="fixed bottom-0 left-1/2 z-50 max-h-[92vh] w-full max-w-[440px] -translate-x-1/2 overflow-y-auto rounded-t-3xl border-t border-border bg-card p-6 pb-8"
           >
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-lg font-display font-bold">Add Udhari / EMI</h2>
@@ -652,6 +714,17 @@ function AddDebtSheet({
                 className="w-full bg-secondary rounded-xl px-3 py-2.5 text-sm outline-none placeholder:text-foreground/30"
               />
             </Field>
+            {isPersonDebt(kind) && (
+              <Field label="Mobile number (Call & WhatsApp)">
+                <input
+                  inputMode="tel"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9+ ()-]/g, ""))}
+                  placeholder="e.g. 98765 43210"
+                  className="w-full rounded-xl bg-secondary px-3 py-2.5 text-sm outline-none placeholder:text-foreground/30"
+                />
+              </Field>
+            )}
             <Field label="Total Amount">
               <input
                 inputMode="decimal" value={principal}
