@@ -26,6 +26,26 @@ type AuthContext = {
   userId: string;
 };
 
+type DebtQueryRow = {
+  id: string;
+  kind: string;
+  title: string;
+  principal: number | string;
+  monthly: number | string | null;
+  due_date: string | null;
+};
+
+type TransactionQueryRow = {
+  id: string;
+  type: string;
+  amount: number | string;
+  category: string;
+  note: string | null;
+  date: string;
+  method: string;
+  source: string;
+};
+
 async function requirePremium(context: AuthContext) {
   const { data, error } = await context.supabase
     .from("subscriptions")
@@ -68,7 +88,7 @@ async function loadFinance(context: AuthContext) {
   for (const row of entryResult.data ?? []) entries.set(row.debt_id, [...(entries.get(row.debt_id) ?? []), Number(row.amount)]);
   const payments = new Map<string, number[]>();
   for (const row of paymentResult.data ?? []) payments.set(row.debt_id, [...(payments.get(row.debt_id) ?? []), Number(row.amount)]);
-  const debts: GuruDebtRow[] = (debtResult.data ?? []).map((row) => ({
+  const debts: GuruDebtRow[] = (debtResult.data ?? []).map((row: DebtQueryRow) => ({
     id: row.id,
     kind: row.kind,
     title: row.title,
@@ -78,7 +98,7 @@ async function loadFinance(context: AuthContext) {
     entries: entries.get(row.id) ?? [],
     payments: payments.get(row.id) ?? [],
   }));
-  const transactions: Transaction[] = (txResult.data ?? []).map((row) => ({
+  const transactions: Transaction[] = (txResult.data ?? []).map((row: TransactionQueryRow) => ({
     id: row.id,
     type: row.type === "income" ? "income" : "expense",
     amount: Number(row.amount),
