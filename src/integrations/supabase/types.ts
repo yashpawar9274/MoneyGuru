@@ -302,6 +302,33 @@ export type Database = {
         }
         Relationships: []
       }
+      guru_request_quota: {
+        Row: {
+          day_count: number
+          day_start: string
+          kind: string
+          minute_count: number
+          minute_start: string
+          user_id: string
+        }
+        Insert: {
+          day_count?: number
+          day_start: string
+          kind: string
+          minute_count?: number
+          minute_start: string
+          user_id: string
+        }
+        Update: {
+          day_count?: number
+          day_start?: string
+          kind?: string
+          minute_count?: number
+          minute_start?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       guru_voice_quota: {
         Row: {
           request_count: number
@@ -610,6 +637,15 @@ export type Database = {
       activate_pro: { Args: never; Returns: undefined }
       apply_paid_order: { Args: { p_order_id: string }; Returns: string }
       bootstrap_account: { Args: never; Returns: undefined }
+      consume_guru_quota: {
+        Args: { p_kind: string }
+        Returns: {
+          allowed: boolean
+          reason: string
+          remaining_today: number
+          retry_after: number
+        }[]
+      }
       consume_guru_voice_quota:
         | { Args: { _limit?: number; _window?: string }; Returns: boolean }
         | {
