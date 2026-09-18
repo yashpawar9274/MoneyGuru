@@ -1,6 +1,7 @@
 # Roadmap
 
 - [ ] Guru Voice AI: secure premium voice conversation with real finance context
+- [ ] Credit cards: track card limit, purchases, repayments, and remaining available credit
 - [ ] Money screen: search and date/type/category filters
 - [ ] Udhari: person-wise call, WhatsApp, ledger, and receipt actions
 - [x] Payments: PayU checkout and server-side fulfilment

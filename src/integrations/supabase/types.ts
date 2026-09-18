@@ -86,6 +86,86 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_card_entries: {
+        Row: {
+          amount: number
+          card_id: string
+          created_at: string
+          entry_date: string
+          entry_type: string
+          id: string
+          note: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          created_at?: string
+          entry_date?: string
+          entry_type: string
+          id?: string
+          note?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          created_at?: string
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          note?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_card_entries_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_cards: {
+        Row: {
+          created_at: string
+          credit_limit: number
+          due_day: number | null
+          id: string
+          last_four: string
+          name: string
+          statement_day: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit_limit: number
+          due_day?: number | null
+          id?: string
+          last_four: string
+          name: string
+          statement_day?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credit_limit?: number
+          due_day?: number | null
+          id?: string
+          last_four?: string
+          name?: string
+          statement_day?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       debt_entries: {
         Row: {
           amount: number
@@ -495,6 +575,7 @@ export type Database = {
         Row: {
           amount: number
           attachment_path: string | null
+          card_id: string | null
           category: string
           created_at: string
           date: string
@@ -508,6 +589,7 @@ export type Database = {
         Insert: {
           amount: number
           attachment_path?: string | null
+          card_id?: string | null
           category?: string
           created_at?: string
           date?: string
@@ -521,6 +603,7 @@ export type Database = {
         Update: {
           amount?: number
           attachment_path?: string | null
+          card_id?: string | null
           category?: string
           created_at?: string
           date?: string
@@ -531,7 +614,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
