@@ -575,6 +575,7 @@ export type Database = {
         Row: {
           amount: number
           attachment_path: string | null
+          card_id: string | null
           category: string
           created_at: string
           date: string
@@ -588,6 +589,7 @@ export type Database = {
         Insert: {
           amount: number
           attachment_path?: string | null
+          card_id?: string | null
           category?: string
           created_at?: string
           date?: string
@@ -601,6 +603,7 @@ export type Database = {
         Update: {
           amount?: number
           attachment_path?: string | null
+          card_id?: string | null
           category?: string
           created_at?: string
           date?: string
@@ -611,7 +614,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

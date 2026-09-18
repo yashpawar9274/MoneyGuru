@@ -1,0 +1,4 @@
+ALTER TABLE public.transactions ADD COLUMN card_id uuid REFERENCES public.credit_cards(id) ON DELETE SET NULL;
+CREATE INDEX transactions_card_id_idx ON public.transactions(card_id);
+CREATE OR REPLACE FUNCTION public.validate_transaction_card_owner() RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $$ BEGIN IF NEW.card_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.credit_cards c WHERE c.id = NEW.card_id AND c.user_id = NEW.user_id) THEN RAISE EXCEPTION 'Credit card does not belong to this user'; END IF; RETURN NEW; END; $$;
+CREATE TRIGGER validate_transaction_card_owner BEFORE INSERT OR UPDATE OF card_id, user_id ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.validate_transaction_card_owner();
