@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.consume_guru_quota(text) FROM PUBLIC, anon, authenticated;
