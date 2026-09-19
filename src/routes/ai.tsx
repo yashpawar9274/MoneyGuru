@@ -10,6 +10,10 @@ export const Route = createFileRoute("/ai")({
     meta: [
       { title: "AI Coach — MONEY.FYI" },
       { name: "description", content: "Your AI money coach analyses spending and gives voice tips." },
+      { property: "og:title", content: "Guru Voice AI — MoneyGuruAI" },
+      { property: "og:description", content: "Talk securely with a personal AI money coach grounded in your real finances." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AIPage,

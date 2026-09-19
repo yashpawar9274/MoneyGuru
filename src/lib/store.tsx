@@ -22,7 +22,7 @@ interface StoreCtx {
 
 const Ctx = createContext<StoreCtx | null>(null);
 
-const COLUMNS = "id,type,amount,category,note,date,method,source";
+const COLUMNS = "id,type,amount,category,note,date,method,source,card_id";
 
 interface Row {
   id: string;
@@ -33,6 +33,7 @@ interface Row {
   date: string;
   method?: string | null;
   source?: string | null;
+  card_id?: string | null;
 }
 
 function fromRow(r: Row): Transaction {
@@ -45,6 +46,7 @@ function fromRow(r: Row): Transaction {
     date: r.date,
     method: (r.method as PaymentMethod | null) ?? null,
     source: (r.source as Transaction["source"]) ?? "manual",
+    cardId: r.card_id ?? null,
   };
 }
 
@@ -87,6 +89,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           date: tx.date,
           method: tx.method ?? null,
           source: tx.source ?? "manual",
+          card_id: tx.cardId ?? null,
         })
         .select(COLUMNS)
         .single();
@@ -112,6 +115,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (patch.note !== undefined) dbPatch["note"] = patch.note;
       if (patch.date !== undefined) dbPatch["date"] = patch.date;
       if (patch.method !== undefined) dbPatch["method"] = patch.method ?? null;
+      if (patch.cardId !== undefined) dbPatch["card_id"] = patch.cardId ?? null;
       const { error } = await supabase
         .from("transactions")
         .update(dbPatch as never)

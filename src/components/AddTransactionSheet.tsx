@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { useCreditCards } from "@/lib/credit-cards";
 
 function localInput(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -21,6 +22,7 @@ export function AddTransactionSheet({
   initialType?: TxType;
 }) {
   const { addTransaction } = useStore();
+  const { cards } = useCreditCards();
   const { t } = useI18n();
   const [type, setType] = useState<TxType>(initialType);
   const [amount, setAmount] = useState("");
@@ -28,12 +30,14 @@ export function AddTransactionSheet({
   const [note, setNote] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("upi");
   const [when, setWhen] = useState(() => localInput(new Date()));
+  const [cardId, setCardId] = useState("");
 
   useEffect(() => {
     if (!open) return;
     setType(initialType);
     setCategory(CATEGORIES.find((c) => c.kind === initialType)!.id);
     setWhen(localInput(new Date()));
+    setCardId("");
   }, [open, initialType]);
 
   const cats = CATEGORIES.filter((c) => c.kind === type);
@@ -50,6 +54,7 @@ export function AddTransactionSheet({
       date: (Number.isNaN(+at) ? new Date() : at).toISOString(),
       method,
       source: "manual",
+      cardId: type === "expense" && method === "card" && cardId ? cardId : null,
     })
       .then(() => toast.success(`${type === "income" ? "Income" : "Expense"} added`))
       .catch((error) => toast.error(error instanceof Error ? error.message : "Could not save"));
@@ -125,6 +130,20 @@ export function AddTransactionSheet({
                   </button>
                 ))}
               </div>
+              {type === "expense" && method === "card" && cards.length > 0 && (
+                <label className="mt-3 block">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Credit card</span>
+                  <select
+                    value={cardId}
+                    onChange={(event) => setCardId(event.target.value)}
+                    className="mt-2 w-full rounded-2xl bg-secondary px-4 py-3 text-sm outline-none"
+                    aria-label="Credit card used"
+                  >
+                    <option value="">Generic card</option>
+                    {cards.map((card) => <option key={card.id} value={card.id}>{card.name} •••• {card.lastFour}</option>)}
+                  </select>
+                </label>
+              )}
             </div>
 
             <div className="mt-6">

@@ -72,6 +72,7 @@ export interface Transaction {
   date: string;
   method?: PaymentMethod | null;
   source?: "manual" | "scan" | "voice" | "import";
+  cardId?: string | null;
 }
 
 

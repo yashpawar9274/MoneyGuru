@@ -28,6 +28,7 @@ import { QuickAddSheet } from "@/components/QuickAddSheet";
 import { CalculatorPopup } from "@/components/CalculatorPopup";
 import { Toaster } from "sonner";
 import { UpdateNotice } from "@/components/UpdateNotice";
+import { CreditCardsProvider } from "@/lib/credit-cards";
 
 function NotFoundComponent() {
   return (
@@ -147,7 +148,8 @@ function RootComponent() {
         <AuthProvider>
           <AuthGate>
             <StoreProvider>
-              <DebtsProvider>
+              <CreditCardsProvider>
+               <DebtsProvider>
                 <SplashScreen />
                 <UpdateNotice />
                 <AutoVoiceAgent />
@@ -160,7 +162,8 @@ function RootComponent() {
                 {!isPublicPage && <QuickAddSheet open={quickOpen} onClose={() => setQuickOpen(false)} onAddExpense={() => { setAddType("expense"); setAddOpen(true); }} onAddIncome={() => { setAddType("income"); setAddOpen(true); }} onCalculator={() => setCalculatorOpen(true)} />}
                 <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} initialType={addType} />
                 <CalculatorPopup open={calculatorOpen} onClose={() => setCalculatorOpen(false)} />
-              </DebtsProvider>
+               </DebtsProvider>
+              </CreditCardsProvider>
             </StoreProvider>
           </AuthGate>
         </AuthProvider>
