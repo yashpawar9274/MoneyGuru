@@ -21,6 +21,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LedgerRouteImport } from './routes/ledger'
 import { Route as DebtsRouteImport } from './routes/debts'
 import { Route as ContactUsRouteImport } from './routes/contact-us'
+import { Route as CardsRouteImport } from './routes/cards'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -95,6 +96,11 @@ const ContactUsRoute = ContactUsRouteImport.update({
   path: '/contact-us',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CardsRoute = CardsRouteImport.update({
+  id: '/cards',
+  path: '/cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
+  '/cards': typeof CardsRoute
   '/contact-us': typeof ContactUsRoute
   '/debts': typeof DebtsRoute
   '/ledger': typeof LedgerRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
+  '/cards': typeof CardsRoute
   '/contact-us': typeof ContactUsRoute
   '/debts': typeof DebtsRoute
   '/ledger': typeof LedgerRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/ai': typeof AiRoute
   '/analytics': typeof AnalyticsRoute
+  '/cards': typeof CardsRoute
   '/contact-us': typeof ContactUsRoute
   '/debts': typeof DebtsRoute
   '/ledger': typeof LedgerRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai'
     | '/analytics'
+    | '/cards'
     | '/contact-us'
     | '/debts'
     | '/ledger'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai'
     | '/analytics'
+    | '/cards'
     | '/contact-us'
     | '/debts'
     | '/ledger'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/ai'
     | '/analytics'
+    | '/cards'
     | '/contact-us'
     | '/debts'
     | '/ledger'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AiRoute: typeof AiRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  CardsRoute: typeof CardsRoute
   ContactUsRoute: typeof ContactUsRoute
   DebtsRoute: typeof DebtsRoute
   LedgerRoute: typeof LedgerRoute
@@ -429,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactUsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cards': {
+      id: '/cards'
+      path: '/cards'
+      fullPath: '/cards'
+      preLoaderRoute: typeof CardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics': {
       id: '/analytics'
       path: '/analytics'
@@ -522,6 +542,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AiRoute: AiRoute,
   AnalyticsRoute: AnalyticsRoute,
+  CardsRoute: CardsRoute,
   ContactUsRoute: ContactUsRoute,
   DebtsRoute: DebtsRoute,
   LedgerRoute: LedgerRoute,

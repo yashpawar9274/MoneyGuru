@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, Trash2, X } from "lucide-react";
+import { CreditCard, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORIES, categoryMeta, type Category, type TxType } from "@/lib/types";
 import { useStore } from "@/lib/store";
@@ -67,7 +67,7 @@ function MoneyScreen() {
   return <main className="px-4 pb-8 pt-6">
     <div className="flex items-end justify-between gap-3">
       <div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-neon">MoneyGuruAI</p><h1 className="mt-1 text-3xl font-display font-bold">Money</h1></div>
-      <div className="text-right text-[11px] text-foreground/50"><p><span className="text-success font-bold">+{inr(summary.income)}</span> in</p><p><span className="text-danger font-bold">-{inr(summary.expense)}</span> out</p></div>
+       <div className="flex items-center gap-3"><Link to="/cards" aria-label="Credit cards" className="grid size-10 place-items-center rounded-full bg-secondary text-neon"><CreditCard className="size-4" /></Link><div className="text-right text-[11px] text-foreground/50"><p><span className="text-success font-bold">+{inr(summary.income)}</span> in</p><p><span className="text-danger font-bold">-{inr(summary.expense)}</span> out</p></div></div>
     </div>
 
     <div className="relative mt-5"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/35"/><input aria-label="Search transactions" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search note, category or amount" className="w-full rounded-2xl border border-border bg-card py-3.5 pl-10 pr-10 text-sm outline-none focus:border-neon/60"/>{query && <button aria-label="Clear search" onClick={()=>setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2"><X className="size-4 text-foreground/40"/></button>}</div>
