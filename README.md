@@ -30,7 +30,7 @@ A Gen-Z money tracker with AI savings coach, bill scanning, and voice insights â
 ### Run locally
 ```bash
 bun install
-bun run dev          # http://localhost:5173
+bun run dev          # http://localhost:8080
 bun run build        # production build
 ```
 
