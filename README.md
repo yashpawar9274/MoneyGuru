@@ -152,7 +152,7 @@ Full mobile docs: [`mobile/README.md`](mobile/README.md).
 
 MIT License
 
-Copyright (c) 2026 Yash Pawar
+Copyright (c) 2026 Yash Pawar 7385066631
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
