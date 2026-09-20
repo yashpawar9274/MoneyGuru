@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { Bell, TrendingUp, ArrowDownRight, ArrowUpRight, HandCoins } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bell, TrendingUp, ArrowDownRight, ArrowUpRight, HandCoins, CreditCard, Minus, Plus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { groupByDay, inRange, totals, useStore } from "@/lib/store";
 import { categoryMeta } from "@/lib/types";
@@ -8,12 +8,19 @@ import { useI18n } from "@/lib/i18n";
 import { AIAdvisorCard } from "@/components/AIAdvisorCard";
 import { ScanBillButton } from "@/components/ScanBillButton";
 import { useAuth } from "@/lib/auth";
+import { useCreditCards } from "@/lib/credit-cards";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "MONEY.FYI — Dashboard" },
       { name: "description", content: "Your daily money snapshot, AI coach, and bill scanner." },
+      { property: "og:title", content: "MONEY.FYI — Dashboard" },
+      { property: "og:description", content: "Your daily money snapshot, AI coach, and bill scanner." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dashboard,
@@ -33,9 +40,13 @@ function dayLabel(iso: string, t: (k: "today" | "yesterday" | "earlier") => stri
 }
 
 function Dashboard() {
-  const { transactions } = useStore();
+  const { transactions, addTransaction } = useStore();
+  const { cards, addRepayment, cardBalance } = useCreditCards();
   const { profile, user } = useAuth();
   const { t, setLang, lang } = useI18n();
+  const [cardAction, setCardAction] = useState<{ cardId: string; kind: "payment" | "expense" } | null>(null);
+  const [cardAmount, setCardAmount] = useState("");
+  const [savingCardAction, setSavingCardAction] = useState(false);
   const initials = (profile?.full_name || user?.email || "MG").slice(0, 2).toUpperCase();
 
   const stats = useMemo(() => {
@@ -51,6 +62,45 @@ function Dashboard() {
   }, [transactions]);
 
   const groups = useMemo(() => groupByDay(transactions).slice(0, 5), [transactions]);
+  const totalCardAvailable = useMemo(
+    () => cards.reduce((sum, card) => sum + cardBalance(card.id).available, 0),
+    [cards, cardBalance],
+  );
+  const selectedCard = cardAction ? cards.find((card) => card.id === cardAction.cardId) : undefined;
+
+  async function saveCardAction() {
+    if (!cardAction || !selectedCard) return;
+    const amount = Number(cardAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    setSavingCardAction(true);
+    try {
+      if (cardAction.kind === "payment") {
+        await addRepayment(selectedCard.id, amount, "Card payment");
+        toast.success("Card payment added");
+      } else {
+        await addTransaction({
+          type: "expense",
+          amount,
+          category: "other",
+          note: `${selectedCard.name} card expense`,
+          date: new Date().toISOString(),
+          method: "card",
+          source: "manual",
+          cardId: selectedCard.id,
+        });
+        toast.success("Card expense added");
+      }
+      setCardAmount("");
+      setCardAction(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update card balance");
+    } finally {
+      setSavingCardAction(false);
+    }
+  }
 
   return (
     <div className="px-5 pt-6">
@@ -97,14 +147,62 @@ function Dashboard() {
             </span>
           </div>
           <h2 className="text-4xl font-display font-bold tracking-tight mb-2 relative">
-            {formatINR(stats.all.balance)}
+            {formatINR(stats.all.balance + totalCardAvailable)}
           </h2>
           <div className="flex gap-4 text-xs font-medium opacity-80 relative">
-            <span className="flex items-center gap-1"><ArrowUpRight className="size-3" /> {formatINR(stats.today.income)}</span>
-            <span className="flex items-center gap-1"><ArrowDownRight className="size-3" /> {formatINR(stats.today.expense)}</span>
+            <span>Cash {formatINR(stats.all.balance)}</span>
+            <span>Card {formatINR(totalCardAvailable)}</span>
           </div>
         </div>
       </motion.section>
+
+      <section className="mt-5 border-y border-border py-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Credit available</p>
+            <p className="mt-1 text-xl font-display font-bold">{formatINR(totalCardAvailable)}</p>
+          </div>
+          <Button asChild variant="ghost" size="sm"><Link to="/cards">Manage cards</Link></Button>
+        </div>
+
+        {cards.length === 0 ? (
+          <Link to="/cards" className="flex items-center gap-3 rounded-xl bg-secondary p-3">
+            <span className="grid size-9 place-items-center rounded-lg bg-background"><CreditCard className="size-4 text-neon" /></span>
+            <span className="text-sm font-semibold">Add your credit card</span>
+          </Link>
+        ) : (
+          <div className="space-y-2">
+            {cards.map((card) => {
+              const balance = cardBalance(card.id);
+              return (
+                <div key={card.id} className="flex items-center gap-3 rounded-xl bg-card p-3">
+                  <CreditCard className="size-5 shrink-0 text-neon" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{card.name} •••• {card.lastFour}</p>
+                    <p className="mt-0.5 text-[10px] text-foreground/45">{formatINR(balance.available)} left · {formatINR(balance.outstanding)} used</p>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    aria-label={`Add payment to ${card.name}`}
+                    onClick={() => { setCardAmount(""); setCardAction({ cardId: card.id, kind: "payment" }); }}
+                  >
+                    <Plus className="text-success" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    aria-label={`Add expense to ${card.name}`}
+                    onClick={() => { setCardAmount(""); setCardAction({ cardId: card.id, kind: "expense" }); }}
+                  >
+                    <Minus className="text-danger" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Udhari & EMI quick action */}
       <section className="mt-5">
@@ -185,6 +283,38 @@ function Dashboard() {
           })}
         </div>
       </section>
+
+      {cardAction && selectedCard && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm" onClick={() => setCardAction(null)}>
+          <div className="w-full max-w-[440px] rounded-t-2xl border-t border-border bg-card p-5 pb-8" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-neon">{selectedCard.name} •••• {selectedCard.lastFour}</p>
+                <h2 className="mt-1 text-xl font-display font-bold">{cardAction.kind === "payment" ? "Add card payment" : "Add card expense"}</h2>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setCardAction(null)} aria-label="Close card entry"><X /></Button>
+            </div>
+            <label className="mt-5 block">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Amount</span>
+              <div className="mt-2 flex items-baseline gap-2 border-b border-border pb-2">
+                <span className="text-2xl font-bold text-foreground/40">₹</span>
+                <input
+                  autoFocus
+                  inputMode="decimal"
+                  value={cardAmount}
+                  onChange={(event) => setCardAmount(event.target.value.replace(/[^0-9.]/g, ""))}
+                  placeholder="0"
+                  className="min-w-0 flex-1 bg-transparent text-3xl font-display font-bold outline-none"
+                  aria-label="Card amount"
+                />
+              </div>
+            </label>
+            <Button className="mt-5 h-12 w-full" disabled={savingCardAction} onClick={() => void saveCardAction()}>
+              {savingCardAction ? "Saving…" : cardAction.kind === "payment" ? "Add payment (+)" : "Add expense (−)"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
