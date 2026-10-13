@@ -9,6 +9,10 @@ A Gen-Z money tracker with AI savings coach, bill scanning, and voice insights â
 
 > Live: **<https://moneyguruai.dev>**
 
+## Android APK of the current web app
+
+For the same screens and cloud account as the web app, use the Capacitor Android project at `/android`. Setup, APK commands and device verification requirements are in [ANDROID.md](ANDROID.md). Electron is desktop-only and is not used for Android. The `/mobile` Expo app remains a separate option.
+
 ---
 
 ## âœ¨ Features

@@ -69,7 +69,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#09090b" },
       { title: "MoneyGuruAI — Personal Money OS" },
       { name: "description", content: "Personal money OS for tracking income, expenses, Udhari and AI-powered money insights." },
@@ -78,8 +78,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "MoneyGuruAI — Personal Money OS" },
       { name: "twitter:description", content: "Personal money OS for tracking income, expenses, Udhari and AI-powered money insights." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/59916948-a948-44ab-9d50-be9ae5e24723" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/59916948-a948-44ab-9d50-be9ae5e24723" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -155,7 +153,7 @@ function RootComponent() {
                 <AutoVoiceAgent />
                 <TrialLock />
 
-                <div className={`min-h-screen mx-auto w-full ${isPublicPage ? "max-w-[900px]" : "max-w-[440px] pb-28"} relative`}>
+                <div className={`app-shell mx-auto w-full ${isPublicPage ? "max-w-[900px]" : "pb-28"} relative`}>
                   <Outlet />
                 </div>
                 {!isPublicPage && <BottomNav onAdd={() => setQuickOpen(true)} />}

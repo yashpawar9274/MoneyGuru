@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MoneyGuruAI</string>
+    <string name="title_activity_main">MoneyGuruAI</string>
+    <string name="package_name">dev.moneyguruai.app</string>
+    <string name="custom_url_scheme">dev.moneyguruai.app</string>
+</resources>
