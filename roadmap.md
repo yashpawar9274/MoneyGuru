@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Android: package the current web app as an APK and make the shared layout fill available screen sizes
+
 - [ ] Guru Voice AI: secure premium voice conversation with real finance context
 - [x] Credit cards: track card limit, purchases, repayments, and remaining available credit
 - [ ] Money screen: search and date/type/category filters
