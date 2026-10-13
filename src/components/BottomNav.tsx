@@ -23,8 +23,8 @@ export function BottomNav({ onAdd }: { onAdd: () => void }) {
   };
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[440px] -translate-x-1/2 border-t border-border bg-background/85 px-4 pb-4 pt-2 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-sm items-center justify-between">
+    <nav className="app-bottom-nav fixed inset-x-0 bottom-0 z-40 w-full border-t border-border bg-background/85 px-4 pb-4 pt-2 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between">
         {item("/", Home, "Home")}
         {item("/transactions", ReceiptText, "Money")}
         <motion.button
